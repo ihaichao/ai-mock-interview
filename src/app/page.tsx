@@ -1,5 +1,12 @@
-import { redirect } from 'next/navigation';
+import { SiteHeader } from "@/components/site-header"
+import { HeroSection } from "@/components/hero-section"
 
 export default function Home() {
-  redirect('/login');
+  return (
+    <>
+      <SiteHeader />
+      <HeroSection />
+    </>
+  )
 }
+
