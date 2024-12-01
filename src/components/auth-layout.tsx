@@ -108,16 +108,9 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
         <div className="flex flex-col justify-center px-12 lg:px-16 xl:px-24">
           <div className="mb-8 h-[300px] w-full rounded-2xl bg-[#E9ECEF]" />
           <div className="relative">
-            <div className="absolute -left-6 top-0 text-[80px] leading-none text-[#E9ECEF]">
-              "
-            </div>
             <p className="text-xl leading-relaxed text-[#2D2D2D]">
               The mock interview feature is phenomenal. I conducted 10 mock interviews each time before facing the real thing, significantly boosting my confidence.
             </p>
-            <div className="mt-6">
-              <p className="font-medium text-[#2D2D2D]">Emily J.</p>
-              <p className="text-[#6C757D]">Account Executive</p>
-            </div>
           </div>
         </div>
       </div>
