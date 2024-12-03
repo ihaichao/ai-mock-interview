@@ -44,8 +44,10 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
             </Link>
           </div>
 
-          <Button className="mt-6 h-12 w-full rounded-xl bg-black text-base font-medium text-white hover:bg-black/90">
-            {isSignIn ? "SIGN IN" : "SIGN UP"}
+          <Button className="mt-6 h-12 w-full rounded-xl bg-black text-base font-medium text-white hover:bg-black/90" asChild>
+            <Link href="/dashboard/resume">
+              {isSignIn ? "SIGN IN" : "SIGN UP"}
+            </Link>
           </Button>
 
           <p className="mt-4 text-center text-sm text-[#6C757D]">
