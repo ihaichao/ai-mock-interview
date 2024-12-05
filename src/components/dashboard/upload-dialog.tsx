@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { FileText, X } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
 interface UploadDialogProps {
   open: boolean
