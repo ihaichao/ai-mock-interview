@@ -78,40 +78,21 @@ export default function CreateResumePage() {
     // Handle form submission
   }
 
-  const addArrayField = (fieldName: keyof FormData) => {
-    const currentValues = form.getValues(fieldName) as any[]
+  const addArrayField = <T extends keyof Pick<FormData, 'workExperiences' | 'projectExperiences' | 'educations'>>(fieldName: T) => {
+    const currentValues = form.getValues(fieldName);
     const defaultValues = {
-      workExperiences: { 
-        company: "", 
-        startDate: "", 
-        endDate: "", 
-        jobTitle: "", 
-        workDescription: "" 
-      },
-      projectExperiences: { 
-        name: "", 
-        role: "", 
-        description: "" 
-      },
-      educations: { 
-        school: "", 
-        degree: "", 
-        fieldOfStudy: "", 
-        startDate: "", 
-        endDate: "" 
-      }
-    }
+      workExperiences: { company: "", startDate: "", endDate: "", jobTitle: "", workDescription: "" },
+      projectExperiences: { name: "", role: "", description: "" },
+      educations: { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" }
+    };
 
-    form.setValue(fieldName, [...currentValues, defaultValues[fieldName]])
-  }
+    form.setValue(fieldName, [...currentValues, defaultValues[fieldName]] as any);
+  };
 
-  const removeArrayField = (fieldName: keyof FormData, index: number) => {
-    const currentValues = form.getValues(fieldName) as any[]
-    form.setValue(
-      fieldName, 
-      currentValues.filter((_, i) => i !== index)
-    )
-  }
+  const removeArrayField = <T extends keyof Pick<FormData, 'workExperiences' | 'projectExperiences' | 'educations'>>(fieldName: T, index: number) => {
+    const currentValues = form.getValues(fieldName);
+    form.setValue(fieldName, currentValues.filter((_, i) => i !== index) as any);
+  };
 
   return (
     <div className="flex h-screen bg-[#F8F9FA]">
