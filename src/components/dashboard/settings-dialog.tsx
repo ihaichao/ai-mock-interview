@@ -1,0 +1,76 @@
+"use client"
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { LogOut } from 'lucide-react'
+
+interface SettingsDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[800px] p-6">
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="text-xl font-medium text-[#2D2D2D]">Settings</DialogTitle>
+        </DialogHeader>
+
+        <div className="mt-6 space-y-6">
+          {/* Email Section */}
+          <div className="space-y-2">
+            <h3 className="text-base font-medium text-[#2D2D2D]">Email</h3>
+            <p className="text-[#6C757D]">8376461364@gmail.com</p>
+          </div>
+
+          {/* Password Section */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-[#2D2D2D]">Password</h3>
+            <Button 
+              variant="outline" 
+              className="h-9 rounded-lg border-[#E5E7EB] px-4 text-sm font-medium text-[#2D2D2D]"
+            >
+              Reset password
+            </Button>
+          </div>
+
+          {/* Privacy Policy Section */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-[#2D2D2D]">Privacy policy</h3>
+            <Button 
+              variant="outline" 
+              className="h-9 rounded-lg border-[#E5E7EB] px-4 text-sm font-medium text-[#2D2D2D]"
+            >
+              Privacy policy
+            </Button>
+          </div>
+
+          {/* Delete Account Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-medium text-[#2D2D2D]">Delete my account</h3>
+              <Button 
+                variant="outline" 
+                className="h-9 rounded-lg border-[#E5E7EB] px-4 text-sm font-medium text-[#2D2D2D]"
+              >
+                Delete account
+              </Button>
+            </div>
+            <p className="text-sm text-[#6C757D]">Delete your account and all associated data</p>
+          </div>
+
+          {/* Log Out Button */}
+          <Button 
+            variant="outline" 
+            className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border-[#E5E7EB] py-6 text-base font-medium text-[#2D2D2D]"
+          >
+            <LogOut className="h-5 w-5" />
+            Log out
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

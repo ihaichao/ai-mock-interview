@@ -1,22 +1,116 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { MapPin, Phone, Mail, LinkIcon } from 'lucide-react'
+import { Form } from "@/components/ui/form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { AutoForm } from "@/components/ui/auto-form"
+
+// Schema 定义
+const personalInfoSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  location: z.string().min(1, "Location is required"),
+  phone: z.string().min(1, "Phone is required"),
+  email: z.string().email("Invalid email address"),
+  social: z.string().url("Invalid URL").optional(),
+  introduction: z.string().min(1, "Introduction is required"),
+})
+
+const workExperienceSchema = z.object({
+  company: z.string().min(1, "Company name is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+  jobTitle: z.string().min(1, "Job title is required"),
+  workDescription: z.string().optional(),
+})
+
+const projectExperienceSchema = z.object({
+  name: z.string().min(1, "Project name is required"),
+  role: z.string().min(1, "Role is required"),
+  description: z.string().min(1, "Description is required"),
+})
+
+const educationSchema = z.object({
+  school: z.string().min(1, "School name is required"),
+  degree: z.string().min(1, "Degree is required"),
+  fieldOfStudy: z.string().min(1, "Field of study is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+})
+
+const formSchema = z.object({
+  personalInfo: personalInfoSchema,
+  workExperiences: z.array(workExperienceSchema),
+  projectExperiences: z.array(projectExperienceSchema),
+  educations: z.array(educationSchema),
+})
+
+type FormData = z.infer<typeof formSchema>
 
 export default function CreateResumePage() {
-  const router = useRouter()
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      personalInfo: {
+        name: "",
+        location: "",
+        phone: "",
+        email: "",
+        social: "",
+        introduction: "",
+      },
+      workExperiences: [
+        { company: "", startDate: "", endDate: "", jobTitle: "", workDescription: "" }
+      ],
+      projectExperiences: [
+        { name: "", role: "", description: "" }
+      ],
+      educations: [
+        { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" }
+      ],
+    }
+  })
 
-  const handleCancel = () => {
-    router.push('/dashboard/resume')
+  const onSubmit = (data: FormData) => {
+    console.log(data)
+    // Handle form submission
   }
 
-  const handleSave = () => {
-    // Implement save functionality here
-    console.log("Save button clicked")
+  const addArrayField = (fieldName: keyof FormData) => {
+    const currentValues = form.getValues(fieldName) as any[]
+    const defaultValues = {
+      workExperiences: { 
+        company: "", 
+        startDate: "", 
+        endDate: "", 
+        jobTitle: "", 
+        workDescription: "" 
+      },
+      projectExperiences: { 
+        name: "", 
+        role: "", 
+        description: "" 
+      },
+      educations: { 
+        school: "", 
+        degree: "", 
+        fieldOfStudy: "", 
+        startDate: "", 
+        endDate: "" 
+      }
+    }
+
+    form.setValue(fieldName, [...currentValues, defaultValues[fieldName]])
+  }
+
+  const removeArrayField = (fieldName: keyof FormData, index: number) => {
+    const currentValues = form.getValues(fieldName) as any[]
+    form.setValue(
+      fieldName, 
+      currentValues.filter((_, i) => i !== index)
+    )
   }
 
   return (
@@ -25,104 +119,120 @@ export default function CreateResumePage() {
       <main className="flex-1 overflow-auto">
         <div className="h-full p-8">
           <div className="mb-6">
-            <h1 className="text-2xl font-medium text-[#2D2D2D]">create resume</h1>
+            <h1 className="text-2xl font-medium text-[#2D2D2D]">Create Resume</h1>
           </div>
           <div className="rounded-xl bg-white p-6 shadow-sm">
-            <form className="space-y-8">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <Input 
-                  placeholder="Name" 
-                  className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                />
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-[#6C757D]" />
-                    <Input 
-                      placeholder="Location" 
-                      className="h-12 rounded-xl bg-[#F8F9FA] pl-12 pr-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-3.5 h-5 w-5 text-[#6C757D]" />
-                    <Input 
-                      placeholder="Phone" 
-                      className="h-12 rounded-xl bg-[#F8F9FA] pl-12 pr-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-3.5 h-5 w-5 text-[#6C757D]" />
-                    <Input 
-                      placeholder="Email" 
-                      className="h-12 rounded-xl bg-[#F8F9FA] pl-12 pr-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </div>
-                  <div className="relative">
-                    <LinkIcon className="absolute left-4 top-3.5 h-5 w-5 text-[#6C757D]" />
-                    <Input 
-                      placeholder="Linkedin or MaiMaiUrl" 
-                      className="h-12 rounded-xl bg-[#F8F9FA] pl-12 pr-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Personal Introduction */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-medium text-[#2D2D2D]">Personal Introduction</h2>
-                <Textarea 
-                  className="min-h-[120px] rounded-xl bg-[#F8F9FA] p-4 text-base placeholder:text-[#6C757D]"
-                />
-              </div>
-
-              {/* Work Experience */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-medium text-[#2D2D2D]">Work Experience</h2>
-                <div className="space-y-4">
-                  <Input 
-                    placeholder="Company" 
-                    className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Personal Info Section */}
+                <div>
+                  <h2 className="text-xl font-medium mb-4">Personal Information</h2>
+                  <AutoForm 
+                    schema={personalInfoSchema} 
+                    form={form} 
+                    path="personalInfo" 
                   />
-                  <div className="flex items-center gap-4">
-                    <Input 
-                      placeholder="Date" 
-                      className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                    />
-                    <div className="flex h-12 w-12 items-center justify-center">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19" stroke="#6C757D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 5L19 12L12 19" stroke="#6C757D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                </div>
+
+                {/* Work Experiences Section */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-medium">Work Experience</h2>
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={() => addArrayField("workExperiences")}
+                    >
+                      Add Work Experience
+                    </Button>
+                  </div>
+                  {form.watch('workExperiences').map((_, index) => (
+                    <div key={index} className="relative border rounded-lg p-4 mb-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeArrayField("workExperiences", index)}
+                      >
+                        Remove
+                      </Button>
+                      <AutoForm
+                        schema={workExperienceSchema}
+                        form={form}
+                        path={`workExperiences.${index}`}
+                      />
                     </div>
-                    <Input 
-                      placeholder="Date" 
-                      className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </div>
-                  <Input 
-                    placeholder="Job title" 
-                    className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                  />
+                  ))}
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="h-10 px-6 rounded-lg border-[#E5E7EB] text-sm font-medium text-[#2D2D2D]"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  className="h-10 px-6 rounded-lg bg-[#4AE68A] text-sm font-medium text-white hover:bg-[#3dd17a]"
-                >
-                  Save
-                </Button>
-              </div>
-            </form>
+                {/* Project Experiences Section */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-medium">Projects</h2>
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={() => addArrayField("projectExperiences")}
+                    >
+                      Add Project
+                    </Button>
+                  </div>
+                  {form.watch('projectExperiences').map((_, index) => (
+                    <div key={index} className="relative border rounded-lg p-4 mb-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeArrayField("projectExperiences", index)}
+                      >
+                        Remove
+                      </Button>
+                      <AutoForm
+                        schema={projectExperienceSchema}
+                        form={form}
+                        path={`projectExperiences.${index}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Education Section */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-medium">Education</h2>
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={() => addArrayField("educations")}
+                    >
+                      Add Education
+                    </Button>
+                  </div>
+                  {form.watch('educations').map((_, index) => (
+                    <div key={index} className="relative border rounded-lg p-4 mb-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeArrayField("educations", index)}
+                      >
+                        Remove
+                      </Button>
+                      <AutoForm
+                        schema={educationSchema}
+                        form={form}
+                        path={`educations.${index}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <Button type="submit" className="w-full">Save Resume</Button>
+              </form>
+            </Form>
           </div>
         </div>
       </main>
