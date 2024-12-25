@@ -5,7 +5,11 @@ import { Phone, Camera, Subtitles } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
-export default function InterviewRoom({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function InterviewRoom({ params }: PageProps) {
   console.log(params)
   const [time, setTime] = useState(0)
   const [cameraOff, setCameraOff] = useState(false)

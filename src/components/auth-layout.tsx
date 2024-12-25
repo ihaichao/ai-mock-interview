@@ -72,7 +72,7 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
 
       if (isSignIn) {
         // Handle login
-        const result = await loginTrigger(payload)
+        const result = await loginTrigger(null, { arg: payload } as any)
         if (result.status === "success") {
           // Store token if provided
           if (result.token) {
@@ -84,7 +84,7 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
         }
       } else {
         // Handle signup
-        const result = await signupTrigger(payload)
+        const result = await signupTrigger(null, { arg: payload } as any)
         if (result.status === "success") {
           router.push('/dashboard/resume')
         } else {
