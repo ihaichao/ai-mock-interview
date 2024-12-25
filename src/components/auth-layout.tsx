@@ -91,7 +91,8 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
           setGeneralError(result.message || "Registration failed")
         }
       }
-    } catch (err) {
+    } catch (e) {
+      console.log(e)
       setGeneralError("An error occurred. Please try again later.")
     }
   }

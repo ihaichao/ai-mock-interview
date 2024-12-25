@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
 export default function InterviewRoom({ params }: { params: { id: string } }) {
+  console.log(params)
   const [time, setTime] = useState(0)
   const [cameraOff, setCameraOff] = useState(false)
   const [subtitlesOff, setSubtitlesOff] = useState(false)
