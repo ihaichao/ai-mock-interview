@@ -1,8 +1,13 @@
+"use client"
+
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { SubscriptionTable } from "@/components/dashboard/subscription-table"
 import { Badge } from "@/components/ui/badge"
 
 export default function ProfilePage() {
+  const router = useRouter()
+
   return (
     <div className="flex h-screen bg-[#F8F9FA]">
       <Sidebar />
@@ -39,7 +44,10 @@ export default function ProfilePage() {
 
             {/* Upgrade Section */}
             <div className="mt-6">
-              <button className="w-full group">
+              <button 
+                className="w-full group"
+                onClick={() => router.push('/dashboard/payment')}
+              >
                 <div className="flex items-center justify-between rounded-xl bg-[#E7FAF0] p-6 transition-colors hover:bg-[#d8f5e5]">
                   <span className="text-lg text-[#2D2D2D]">
                     Upgrade for free mock interviews and experience the AI magic of Mock Mock.

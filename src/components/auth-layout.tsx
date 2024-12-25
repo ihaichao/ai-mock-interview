@@ -1,7 +1,15 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import useSWRMutation from 'swr/mutation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from "next/image"
+import { createAccount, login } from "@/services/auth"
+import { API_ROUTES } from "@/services/api"
+import type { CreateAccountResponse, LoginResponse } from "@/services/types"
 
 interface AuthLayoutProps {
   mode: 'sign-in' | 'sign-up'
@@ -9,10 +17,87 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ mode }: AuthLayoutProps) {
   const isSignIn = mode === 'sign-in'
-  
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [generalError, setGeneralError] = useState("")
+
+  // Initialize SWR mutations
+  const { trigger: signupTrigger, isMutating: isSigningUp } = useSWRMutation<CreateAccountResponse>(
+    API_ROUTES.CREATE_ACCOUNT,
+    createAccount
+  )
+
+  const { trigger: loginTrigger, isMutating: isLoggingIn } = useSWRMutation<LoginResponse>(
+    API_ROUTES.LOGIN,
+    login
+  )
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  const validatePassword = (password: string) => {
+    return password.length >= 6
+  }
+
+  const handleSubmit = async () => {
+    // Reset all errors
+    setEmailError("")
+    setPasswordError("")
+    setGeneralError("")
+
+    // Validate inputs
+    let hasError = false
+
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address")
+      hasError = true
+    }
+
+    if (!validatePassword(password)) {
+      setPasswordError("Password must be at least 6 characters long")
+      hasError = true
+    }
+
+    if (hasError) return
+
+    try {
+      const payload = {
+        email: email,
+        password: password
+      }
+
+      if (isSignIn) {
+        // Handle login
+        const result = await loginTrigger(payload)
+        if (result.status === "success") {
+          // Store token if provided
+          if (result.token) {
+            localStorage.setItem('token', result.token)
+          }
+          router.push('/dashboard/resume')
+        } else {
+          setGeneralError(result.message || "Login failed")
+        }
+      } else {
+        // Handle signup
+        const result = await signupTrigger(payload)
+        if (result.status === "success") {
+          router.push('/dashboard/resume')
+        } else {
+          setGeneralError(result.message || "Registration failed")
+        }
+      }
+    } catch (err) {
+      setGeneralError("An error occurred. Please try again later.")
+    }
+  }
+
   return (
     <div className="flex min-h-screen">
-      {/* Left Section */}
       <div className="flex w-full flex-col justify-center px-4 md:w-1/2 md:px-12 lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-[420px]">
           <h1 className="mb-8 text-3xl font-medium text-[#2D2D2D]">
@@ -20,17 +105,40 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
           </h1>
           
           <div className="space-y-4">
-            <Input 
-              type="email" 
-              placeholder="Email" 
-              className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]" 
-            />
-            <Input 
-              type="password" 
-              placeholder="Password" 
-              className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]" 
-            />
+            <div className="space-y-2">
+              <Input 
+                type="email" 
+                placeholder="Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D] ${
+                  emailError ? "border-red-500" : ""
+                }`}
+              />
+              {emailError && (
+                <p className="text-sm text-red-500">{emailError}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Input 
+                type="password" 
+                placeholder="Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D] ${
+                  passwordError ? "border-red-500" : ""
+                }`}
+              />
+              {passwordError && (
+                <p className="text-sm text-red-500">{passwordError}</p>
+              )}
+            </div>
           </div>
+
+          {generalError && (
+            <p className="mt-4 text-sm text-red-500">{generalError}</p>
+          )}
 
           <div className="mt-4 flex items-center justify-between text-sm">
             <Link 
@@ -44,10 +152,12 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
             </Link>
           </div>
 
-          <Button className="mt-6 h-12 w-full rounded-xl bg-black text-base font-medium text-white hover:bg-black/90" asChild>
-            <Link href="/dashboard/resume">
-              {isSignIn ? "SIGN IN" : "SIGN UP"}
-            </Link>
+          <Button 
+            className="mt-6 h-12 w-full rounded-xl bg-black text-base font-medium text-white hover:bg-black/90"
+            onClick={handleSubmit}
+            disabled={isSigningUp || isLoggingIn}
+          >
+            {isSigningUp || isLoggingIn ? "Loading..." : (isSignIn ? "SIGN IN" : "SIGN UP")}
           </Button>
 
           <p className="mt-4 text-center text-sm text-[#6C757D]">

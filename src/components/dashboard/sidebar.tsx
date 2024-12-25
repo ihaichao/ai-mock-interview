@@ -26,7 +26,7 @@ export function Sidebar() {
       <div className="flex h-full w-[72px] flex-col border-r bg-white">
         <div className="flex h-[72px] items-center justify-center border-b">
           <img 
-            src="../logo.png" 
+            src="/logo.png" 
             alt="MockMock Logo" 
             className="h-10 w-10 rounded-full" 
           />

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table"
 import { Eye, Video } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 interface Interview {
   job: string
@@ -24,6 +25,12 @@ const interviews: Interview[] = [
 ]
 
 export function InterviewTable() {
+  const router = useRouter()
+
+  const handleJoinInterview = () => {
+    router.push('/dashboard/interview/1') // Using a dummy ID of 1
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -57,6 +64,7 @@ export function InterviewTable() {
                 <Button 
                   variant="ghost" 
                   className="h-8 gap-2 px-3 text-sm font-medium text-[#4AE68A] hover:bg-[#E7FAF0] hover:text-[#4AE68A]"
+                  onClick={handleJoinInterview}
                 >
                   <Video className="h-4 w-4" />
                   Join In

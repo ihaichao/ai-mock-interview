@@ -7,6 +7,7 @@ import { Form } from "@/components/ui/form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AutoForm } from "@/components/ui/auto-form"
+import { useRouter } from "next/navigation"
 
 // Schema 定义
 const personalInfoSchema = z.object({
@@ -50,6 +51,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 export default function CreateResumePage() {
+  const router = useRouter()
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,6 +78,10 @@ export default function CreateResumePage() {
   const onSubmit = (data: FormData) => {
     console.log(data)
     // Handle form submission
+  }
+
+  const handleCancel = () => {
+    router.back()
   }
 
   const addArrayField = <T extends keyof Pick<FormData, 'workExperiences' | 'projectExperiences' | 'educations'>>(fieldName: T) => {
@@ -211,7 +217,22 @@ export default function CreateResumePage() {
                   ))}
                 </div>
 
-                <Button type="submit" className="w-full">Save Resume</Button>
+                <div className="flex justify-end space-x-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    className="h-10 px-6 rounded-lg border-[#E5E7EB] text-sm font-medium text-[#2D2D2D]"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="h-10 px-6 rounded-lg bg-[#4AE68A] text-sm font-medium text-white hover:bg-[#3dd17a]"
+                  >
+                    Save
+                  </Button>
+                </div>
               </form>
             </Form>
           </div>
