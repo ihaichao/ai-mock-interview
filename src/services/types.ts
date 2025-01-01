@@ -38,3 +38,13 @@ export interface CreatePaymentRequest {
 }
 
 export interface CreatePaymentResponse extends ApiResponse {}
+
+export interface GetJDListRequest {}
+
+export interface GetJDListResponse extends ApiResponse {
+  jdId: number
+  title: string
+  company: string
+  companyDetail: string
+  jobDesc: string
+}
