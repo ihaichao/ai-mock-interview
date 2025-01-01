@@ -8,6 +8,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import useSWRMutation from 'swr/mutation'
+import { API_ROUTES } from "@/services/api"
+import { createJD } from "@/services/api"
+import { useToast } from "@/components/hooks/use-toast"
 
 interface AddJobDialogProps {
   open: boolean
@@ -15,30 +19,50 @@ interface AddJobDialogProps {
 }
 
 const formSchema = z.object({
-  jobLink: z.string().url({ message: "Please enter a valid URL" }).nonempty("Job link is required"),
-  jobTitle: z.string().nonempty("Job title is required"),
+  title: z.string().nonempty("Job title is required"),
   company: z.string().nonempty("Company name is required"),
-  companyDetails: z.string().nonempty("Company details are required"),
-  jobDescription: z.string().nonempty("Job description is required")
+  companyDetail: z.string().nonempty("Company details are required"),
+  jobDesc: z.string().nonempty("Job description is required")
 })
 
 type JobFormData = z.infer<typeof formSchema>
 
 export function AddJobDialog({ open, onOpenChange }: AddJobDialogProps) {
+  const { toast } = useToast()
+  const { trigger: createJDTrigger, isMutating } = useSWRMutation(
+    API_ROUTES.CREATE_JD,
+    createJD
+  )
   const form = useForm<JobFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      jobLink: "",
-      jobTitle: "",
-      company: "",
-      companyDetails: "",
-      jobDescription: ""
-    }
+    defaultValues: {}
   })
 
-  const onSubmit = (data: JobFormData) => {
-    console.log(data)
-    onOpenChange(false)
+  const onSubmit = async (data: JobFormData) => {
+    try {
+      const result = await createJDTrigger(data)
+      
+      if (result.status) {
+        toast({
+          title: "Success",
+          description: "Job description created successfully",
+        })
+        onOpenChange(false)
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.message || "Failed to create job description",
+        })
+      }
+    } catch (error) {
+      console.error('error :>> ', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create job description",
+      })
+    }
   }
 
   return (
@@ -51,16 +75,15 @@ export function AddJobDialog({ open, onOpenChange }: AddJobDialogProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="jobLink"
+              name="title"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-[#2D2D2D]">
-                    Job Link <span className="text-red-500">*</span>
+                    Job Title <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="https://example.com/job-posting"
                       className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
                     />
                   </FormControl>
@@ -69,51 +92,28 @@ export function AddJobDialog({ open, onOpenChange }: AddJobDialogProps) {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="jobTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-[#2D2D2D]">
-                      Job Title <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Job Title"
-                        className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="company"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-[#2D2D2D]">
-                      Company <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Company"
-                        className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs text-red-500" />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="company"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-[#2D2D2D]">
+                    Company <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
-              name="companyDetails"
+              name="companyDetail"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-[#2D2D2D]">
@@ -133,7 +133,7 @@ export function AddJobDialog({ open, onOpenChange }: AddJobDialogProps) {
 
             <FormField
               control={form.control}
-              name="jobDescription"
+              name="jobDesc"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-[#2D2D2D]">
@@ -163,8 +163,10 @@ export function AddJobDialog({ open, onOpenChange }: AddJobDialogProps) {
               <Button
                 type="submit"
                 className="h-10 px-6 rounded-lg bg-black text-sm font-medium text-white"
+                disabled={isMutating}
+                onClick={() => onSubmit(form.getValues())}
               >
-                Save
+                {isMutating ? "Saving..." : "Save"}
               </Button>
             </div>
           </form>

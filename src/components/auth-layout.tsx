@@ -6,10 +6,11 @@ import useSWRMutation from 'swr/mutation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import Image from "next/image"
+// import Image from "next/image"
 import { createAccount, login } from "@/services/auth"
 import { API_ROUTES } from "@/services/api"
 import type { CreateAccountResponse, LoginResponse } from "@/services/types"
+import { useToast } from "@/components/hooks/use-toast"
 
 interface AuthLayoutProps {
   mode: 'sign-in' | 'sign-up'
@@ -22,7 +23,7 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
   const [password, setPassword] = useState("")
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
-  const [generalError, setGeneralError] = useState("")
+  const { toast } = useToast()
 
   // Initialize SWR mutations
   const { trigger: signupTrigger, isMutating: isSigningUp } = useSWRMutation<CreateAccountResponse>(
@@ -47,7 +48,6 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
     // Reset all errors
     setEmailError("")
     setPasswordError("")
-    setGeneralError("")
 
     // Validate inputs
     let hasError = false
@@ -72,28 +72,47 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
 
       if (isSignIn) {
         // Handle login
-        const result = await loginTrigger(null, { arg: payload } as any)
-        if (result.status === "success") {
-          // Store token if provided
-          if (result.token) {
-            localStorage.setItem('token', result.token)
+        const result = await loginTrigger(payload as any)
+        if (result.status) {
+          toast({
+            description: "Login successful",
+          })
+          if (result.data?.token && result.data?.email) {
+            localStorage.setItem('token', result.data.token)
+            localStorage.setItem('email', result.data.email)
           }
           router.push('/dashboard/resume')
         } else {
-          setGeneralError(result.message || "Login failed")
+          toast({
+            variant: "destructive",
+            title: "Login failed",
+            description: result.message || "Invalid credentials"
+          })
         }
       } else {
         // Handle signup
-        const result = await signupTrigger(null, { arg: payload } as any)
-        if (result.status === "success") {
-          router.push('/dashboard/resume')
+        const result = await signupTrigger(payload as any)
+        if (result.status) {
+          console.log("result", result)
+          toast({
+            title: "Sign up successful",
+            description: result.message || "Please verify your email by using the verification link sent to your email address"
+          })
         } else {
-          setGeneralError(result.message || "Registration failed")
+          toast({
+            variant: "destructive",
+            title: "Registration failed",
+            description: result.message || "Unable to create account"
+          })
         }
       }
     } catch (e) {
       console.log(e)
-      setGeneralError("An error occurred. Please try again later.")
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred. Please try again later."
+      })
     }
   }
 
@@ -137,10 +156,6 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
             </div>
           </div>
 
-          {generalError && (
-            <p className="mt-4 text-sm text-red-500">{generalError}</p>
-          )}
-
           <div className="mt-4 flex items-center justify-between text-sm">
             <Link 
               href={isSignIn ? "/sign-up" : "/sign-in"} 
@@ -172,7 +187,7 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
             </Link>
           </p>
 
-          <div className="mt-6 flex items-center justify-center gap-4">
+          {/* <div className="mt-6 flex items-center justify-center gap-4">
             <Button 
               variant="outline" 
               size="icon" 
@@ -212,7 +227,7 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
                 className="h-6 w-6"
               />
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
 

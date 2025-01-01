@@ -6,10 +6,49 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ArrowLeft } from 'lucide-react'
+import { useToast } from "@/components/hooks/use-toast"
+import useSWRMutation from "swr/mutation"
+import { createPayment, API_ROUTES } from "@/services/api"
 
 export default function PaymentPage() {
   const router = useRouter()
   const [paymentMethod, setPaymentMethod] = useState<"paypal" | "alipay">("paypal")
+  const { toast } = useToast()
+
+  const { trigger: createPaymentTrigger, isMutating } = useSWRMutation(
+    API_ROUTES.CREATE_PAYMENT,
+    createPayment
+  )
+
+  const handlePay = async () => {
+    try {
+      const result = await createPaymentTrigger({
+        amount: '0.01',
+        method: 'paypal',
+        currency: 'USD',
+      })
+
+      if (result.status) {
+        toast({
+          title: "Success",
+          description: "Payment created successfully",
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.message || "Payment failed",
+        })
+      }
+    } catch (error) {
+      console.error("Payment error:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Payment failed. Please try again.",
+      })
+    }
+  }
 
   return (
     <div className="flex h-screen bg-[#F8F9FA]">
@@ -107,8 +146,10 @@ export default function PaymentPage() {
 
               <Button 
                 className="w-full rounded-lg bg-black py-6 text-white hover:bg-black/90"
+                onClick={handlePay}
+                disabled={isMutating}
               >
-                Pay now
+                {isMutating ? "Processing..." : "Pay Now"}
               </Button>
             </div>
           </div>

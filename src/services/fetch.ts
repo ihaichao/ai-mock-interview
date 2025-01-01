@@ -10,6 +10,8 @@ export async function fetchApi<TResponse, TRequest = any>(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-Token': localStorage.getItem('token') || '',
+      'X-Email': localStorage.getItem('email') || '',
     },
     body: JSON.stringify(arg)
   })
