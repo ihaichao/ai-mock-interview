@@ -8,7 +8,7 @@ export async function fetchApi<TResponse, TRequest = any>(
 ): Promise<TResponse> {
   const response = await fetch(url, {
     method: 'POST',
-    credentials: 'include',
+    // credentials: 'include',
     mode: 'cors',
     headers: {
       'Content-Type': 'application/json',
