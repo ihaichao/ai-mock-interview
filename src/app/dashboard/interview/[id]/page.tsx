@@ -1,28 +1,40 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Phone, Camera, Subtitles } from 'lucide-react'
+import { useState, useEffect, useRef } from "react"
+import { Phone, Camera, Subtitles, Play, Square } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function InterviewRoom({ params }: PageProps) {
-  console.log(params)
+export default function InterviewRoom({ params }: { params: { id: string } }) {
   const [time, setTime] = useState(0)
+  const [answerTime, setAnswerTime] = useState(0)
+  const [isAnswering, setIsAnswering] = useState(false)
   const [cameraOff, setCameraOff] = useState(false)
   const [subtitlesOff, setSubtitlesOff] = useState(false)
+  const answerTimerRef = useRef<NodeJS.Timeout>()
   const router = useRouter()
 
-  // Timer effect
+  // Main timer effect
   useEffect(() => {
     const interval = setInterval(() => {
       setTime((prevTime) => prevTime + 1)
     }, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  // Answer timer effect
+  useEffect(() => {
+    if (isAnswering) {
+      answerTimerRef.current = setInterval(() => {
+        setAnswerTime((prevTime) => prevTime + 1)
+      }, 1000)
+    }
+    return () => {
+      if (answerTimerRef.current) {
+        clearInterval(answerTimerRef.current)
+      }
+    }
+  }, [isAnswering])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -32,6 +44,13 @@ export default function InterviewRoom({ params }: PageProps) {
 
   const handleLeave = () => {
     router.push('/dashboard/interview')
+  }
+
+  const toggleAnswering = () => {
+    setIsAnswering(!isAnswering)
+    if (!isAnswering) {
+      setAnswerTime(0) // Reset answer timer when starting
+    }
   }
 
   return (
@@ -113,42 +132,66 @@ export default function InterviewRoom({ params }: PageProps) {
 
         {/* Transcript Section */}
         <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#E7FAF0] px-3 py-1 text-sm text-[#4AE68A]">
+                Ready
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {isAnswering && (
+                <span className="text-sm text-[#6C757D]">
+                  {formatTime(answerTime)}
+                </span>
+              )}
+              <Button
+                variant={isAnswering ? "destructive" : "default"}
+                size="sm"
+                onClick={toggleAnswering}
+                className="gap-2"
+              >
+                {isAnswering ? (
+                  <>
+                    <Square className="h-4 w-4" />
+                    Stop
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Start
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
           <div className="flex-1 overflow-y-auto">
             <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#E7FAF0] px-3 py-1 text-sm text-[#4AE68A]">
-                  Ready
-                </span>
-                <span className="text-sm text-[#6C757D]">AI prompts your answers</span>
+              <div className="space-y-2">
+                <div className="text-[#6C757D]">00:18</div>
+                <ul className="list-disc space-y-2 pl-5 text-[#2D2D2D]">
+                  <li>Referring to my role in overseeing technology and architeture initiatives.</li>
+                  <li>interested in discussing the strategies implemented in a recent launch.</li>
+                  <li>Aiming to highlight the outcomes and impact achieved through the technology solutions</li>
+                </ul>
               </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="text-[#6C757D]">00:18</div>
-                  <ul className="list-disc space-y-2 pl-5 text-[#2D2D2D]">
-                    <li>Referring to my role in overseeing technology and architeture initiatives.</li>
-                    <li>interested in discussing the strategies implemented in a recent launch.</li>
-                    <li>Aiming to highlight the outcomes and impact achieved through the technology solutions</li>
-                  </ul>
-                </div>
+              <div className="rounded-xl bg-[#F8F9FA] p-4">
+                <div className="text-[#6C757D]">00:20</div>
+                <p className="mt-2 text-[#2D2D2D]">
+                  I'm still unclear on what you're referring to. Are you asking about a specific product launch or a project idea? Can you give more details?
+                </p>
+              </div>
 
-                <div className="rounded-xl bg-[#F8F9FA] p-4">
-                  <div className="text-[#6C757D]">00:20</div>
-                  <p className="mt-2 text-[#2D2D2D]">
-                    I'm still unclear on what you're referring to. Are you asking about a specific product launch or a project idea? Can you give more details?
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-[#6C757D]">00:25</div>
-                  <ul className="list-disc space-y-2 pl-5 text-[#2D2D2D]">
-                    <li>Referring to the transformation of an existing merchant platform through Domain-Driven Design</li>
-                    <li>Reduced onboarding time for independent sites from 45 to 7 days and for new business onboarding ur day</li>
-                    <li>Led Sub-project 2: Migrated 90% of warehouse distribution and RSs business systems to the cloud, relcapabilities, and system boundaries</li>
-                    <li>Led Sub-project 1: Collaborated with international mid-end, Lazada trading platform, and Redmart technology teams to define technical boundaries and coordinate across teams</li>
-                    <li>Project challenges: Juhuasuan faced issues integrating personalized businesses into merchant access</li>
-                  </ul>
-                </div>
+              <div className="space-y-2">
+                <div className="text-[#6C757D]">00:25</div>
+                <ul className="list-disc space-y-2 pl-5 text-[#2D2D2D]">
+                  <li>Referring to the transformation of an existing merchant platform through Domain-Driven Design</li>
+                  <li>Reduced onboarding time for independent sites from 45 to 7 days and for new business onboarding ur day</li>
+                  <li>Led Sub-project 2: Migrated 90% of warehouse distribution and RSs business systems to the cloud, relcapabilities, and system boundaries</li>
+                  <li>Led Sub-project 1: Collaborated with international mid-end, Lazada trading platform, and Redmart technology teams to define technical boundaries and coordinate across teams</li>
+                  <li>Project challenges: Juhuasuan faced issues integrating personalized businesses into merchant access</li>
+                </ul>
               </div>
             </div>
           </div>

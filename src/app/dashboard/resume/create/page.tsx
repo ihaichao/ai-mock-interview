@@ -8,40 +8,47 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AutoForm } from "@/components/ui/auto-form"
 import { useRouter } from "next/navigation"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/hooks/use-toast"
+import useSWRMutation from "swr/mutation"
+import { API_ROUTES, createResume } from "@/services/api"
 
 // Schema 定义
 const personalInfoSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  location: z.string().min(1, "Location is required"),
-  phone: z.string().min(1, "Phone is required"),
-  email: z.string().email("Invalid email address"),
-  social: z.string().url("Invalid URL").optional(),
-  introduction: z.string().min(1, "Introduction is required"),
+  name: z.string().optional(),
+  location: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  introduction: z.string().optional(),
 })
 
 const workExperienceSchema = z.object({
-  company: z.string().min(1, "Company name is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  jobTitle: z.string().min(1, "Job title is required"),
-  workDescription: z.string().optional(),
+  company: z.string().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  jobTitle: z.string().optional(),
+  description: z.string().optional(),
 })
 
 const projectExperienceSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-  role: z.string().min(1, "Role is required"),
-  description: z.string().min(1, "Description is required"),
+  company: z.string().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  jobTitle: z.string().optional(),
+  description: z.string().optional(),
+  outcome: z.string().optional(),
 })
 
 const educationSchema = z.object({
-  school: z.string().min(1, "School name is required"),
-  degree: z.string().min(1, "Degree is required"),
-  fieldOfStudy: z.string().min(1, "Field of study is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
+  school: z.string().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  campusExperience: z.string().optional(),
 })
 
 const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
   personalInfo: personalInfoSchema,
   workExperiences: z.array(workExperienceSchema),
   projectExperiences: z.array(projectExperienceSchema),
@@ -52,32 +59,77 @@ type FormData = z.infer<typeof formSchema>
 
 export default function CreateResumePage() {
   const router = useRouter()
+  const { toast } = useToast()
+  const { trigger: createResumeTrigger } = useSWRMutation(
+    API_ROUTES.CREATE_RESUME,
+    createResume
+  )
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      personalInfo: {
-        name: "",
-        location: "",
-        phone: "",
-        email: "",
-        social: "",
-        introduction: "",
-      },
+      title: '',
       workExperiences: [
-        { company: "", startDate: "", endDate: "", jobTitle: "", workDescription: "" }
+        {
+          company: "",
+          startTime: "",
+          endTime: "",
+          jobTitle: "",
+          description: ""
+        }
       ],
       projectExperiences: [
-        { name: "", role: "", description: "" }
+        {
+          company: "",
+          startTime: "",
+          endTime: "",
+          jobTitle: "",
+          description: "",
+          outcome: ""
+        }
       ],
       educations: [
-        { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" }
+        {
+          school: "",
+          startTime: "",
+          endTime: "",
+          campusExperience: ""
+        }
       ],
+      personalInfo: {},
     }
   })
 
-  const onSubmit = (data: FormData) => {
-    console.log(data)
-    // Handle form submission
+  const onSubmit = async (data: FormData) => {
+    try {
+      const result = await createResumeTrigger({
+        type: 'normal',
+        title: data.title,
+        personInfo: JSON.stringify(data.personalInfo),
+        workExperience: JSON.stringify(data.workExperiences),
+        projectExperience: JSON.stringify(data.projectExperiences),
+        education: JSON.stringify(data.educations)
+      })
+      
+      if (result.status) {
+        toast({
+          title: "Success",
+          description: "Resume created successfully",
+        })
+        router.push('/dashboard/resume') // 假设这是简历列表页面的路径
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create resume",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while creating the resume",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleCancel = () => {
@@ -87,12 +139,12 @@ export default function CreateResumePage() {
   const addArrayField = <T extends keyof Pick<FormData, 'workExperiences' | 'projectExperiences' | 'educations'>>(fieldName: T) => {
     const currentValues = form.getValues(fieldName);
     const defaultValues = {
-      workExperiences: { company: "", startDate: "", endDate: "", jobTitle: "", workDescription: "" },
-      projectExperiences: { name: "", role: "", description: "" },
-      educations: { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" }
+      workExperiences: [{ company: "", startTime: "", endTime: "", jobTitle: "", description: "" }],
+      projectExperiences: [{ company: "", startTime: "", endTime: "", jobTitle: "", description: "", outcome: "" }],
+      educations: [{ school: "", startTime: "", endTime: "", campusExperience: "" }]
     };
 
-    form.setValue(fieldName, [...currentValues, defaultValues[fieldName]] as any);
+    form.setValue(fieldName, [...currentValues, ...defaultValues[fieldName]] as any);
   };
 
   const removeArrayField = <T extends keyof Pick<FormData, 'workExperiences' | 'projectExperiences' | 'educations'>>(fieldName: T, index: number) => {
@@ -101,9 +153,7 @@ export default function CreateResumePage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F8F9FA]">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
+    <div className="h-full p-8 bg-[#F8F9FA]">
         <div className="h-full p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-medium text-[#2D2D2D]">Create Resume</h1>
@@ -111,6 +161,18 @@ export default function CreateResumePage() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-medium mb-4">Position title</h2>
+                  {/* <AutoForm 
+                    schema={jobSchema} 
+                    form={form} 
+                    path="position" 
+                  /> */}
+                  <Input
+                    placeholder="title"
+                    {...form.register('title')}
+                  />
+                </div>
                 {/* Personal Info Section */}
                 <div>
                   <h2 className="text-xl font-medium mb-4">Personal Information</h2>
@@ -235,9 +297,8 @@ export default function CreateResumePage() {
                 </div>
               </form>
             </Form>
-          </div>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

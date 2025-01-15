@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/:path*',
-        destination: 'https://www.2100wbtc.com:8080/:path*'
+        source: '/mockInterview/:path*',
+        destination: 'https://www.2100wbtc.com:8080/mockInterview/:path*'
       }
     ]
   }

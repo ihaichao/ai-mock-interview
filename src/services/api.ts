@@ -1,18 +1,29 @@
 import { fetchApi } from './fetch'
-import { CreateAccountRequest, CreateAccountResponse, GetJDListRequest, GetJDListResponse, LoginResponse } from './types'
-import { CreateJDResponse, CreateJDRequest } from './types'
-import { CreatePaymentResponse, CreatePaymentRequest } from './types'
-// Base API configuration
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? '' 
-  : 'https://www.2100wbtc.com:8080'
+import { 
+  CreateAccountRequest, 
+  CreateAccountResponse, 
+  GetJDListRequest, 
+  GetJDListResponse, 
+  LoginResponse,
+  CreateJDResponse,
+  CreateJDRequest,
+  CreatePaymentResponse,
+  CreatePaymentRequest,
+  CreateResumeResponse,
+  CreateResumeRequest,
+  FetchResumeListResponse,
+  FetchResumeDetailResponse
+} from './types'
 
 export const API_ROUTES = {
-  CREATE_ACCOUNT: `${API_BASE_URL}/mockInterview/register`,
-  LOGIN: `${API_BASE_URL}/mockInterview/login`,
-  CREATE_JD: `${API_BASE_URL}/mockInterview/jd/create`,
-  CREATE_PAYMENT: `${API_BASE_URL}/mockInterview/payment/create`,
-  GET_JD_LIST: `${API_BASE_URL}/mockInterview/jd/list`
+  CREATE_ACCOUNT: '/mockInterview/register',
+  LOGIN: '/mockInterview/login',
+  CREATE_JD: '/mockInterview/jd/create',
+  CREATE_PAYMENT: '/mockInterview/payment/create',
+  GET_JD_LIST: '/mockInterview/jd/list',
+  CREATE_RESUME: '/mockInterview/resume/create',
+  FETCH_RESUME_LIST: '/mockInterview/resume/list',
+  FETCH_RESUME_DETAIL: '/mockInterview/resume/getById'
 } as const
 
 
@@ -21,3 +32,6 @@ export const login = fetchApi<LoginResponse, CreateAccountRequest>
 export const createJD = fetchApi<CreateJDResponse, CreateJDRequest>
 export const fetchJDList = fetchApi<GetJDListResponse, GetJDListRequest>
 export const createPayment = fetchApi<CreatePaymentResponse, CreatePaymentRequest>
+export const createResume = fetchApi<CreateResumeResponse, CreateResumeRequest>
+export const fetchResumeList = () => fetchApi<FetchResumeListResponse, null>(API_ROUTES.FETCH_RESUME_LIST, { method: 'GET' })
+export const fetchResumeDetail = (resumeId: string) => fetchApi<FetchResumeDetailResponse, null>(`${API_ROUTES.FETCH_RESUME_DETAIL}/${resumeId}`, { method: 'GET' })

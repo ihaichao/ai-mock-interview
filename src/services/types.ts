@@ -48,3 +48,53 @@ export interface GetJDListResponse extends ApiResponse {
   companyDetail: string
   jobDesc: string
 }
+
+export interface PersonalInfo {
+  name: string
+  location: string
+  phone: string
+  email: string
+  linkedinUrl: string
+}
+
+export interface WorkExperience {
+  company: string
+  startTime: string
+  endTime: string
+  jobTitle: string
+  description: string
+}
+
+export interface ProjectExperience extends WorkExperience {
+  outcome: string
+}
+
+export interface Education {
+  school: string
+  startTime: string
+  endTime: string
+  campusExperience: string
+}
+
+export interface CreateResumeRequest {
+  title: string
+  type: string
+  personInfo: PersonalInfo
+  workExperience: WorkExperience[]
+  projectExperience: ProjectExperience[]
+  education: Education[]
+}
+
+export interface CreateResumeResponse extends ApiResponse {}
+
+export interface FetchResumeListResponse extends ApiResponse {}
+
+export interface FetchResumeDetailResponse extends ApiResponse {
+  resumeId: number
+  title: string
+  type: string
+  personInfo: string
+  workExperience: string
+  projectExperience: string
+  education: string
+}

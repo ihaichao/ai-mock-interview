@@ -54,31 +54,39 @@ export function JDTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {jdList?.map((jd: JD) => (
-          <TableRow key={jd.id} className="border-b">
-            <TableCell className="py-4 font-medium">{jd.title}</TableCell>
-            <TableCell className="py-4">{jd.company}</TableCell>
-            <TableCell className="py-4">{new Date(jd.createdAt).toLocaleDateString()}</TableCell>
-            <TableCell className="py-4">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-[#6C757D] hover:text-[#4AE68A]"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-[#6C757D] hover:text-red-500"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+        {jdList?.length ? (
+          jdList.map((jd: JD) => (
+            <TableRow key={jd.id} className="border-b">
+              <TableCell className="py-4 font-medium">{jd.title}</TableCell>
+              <TableCell className="py-4">{jd.company}</TableCell>
+              <TableCell className="py-4">{new Date(jd.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell className="py-4">
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-[#6C757D] hover:text-[#4AE68A]"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-[#6C757D] hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={4} className="h-48 text-center text-muted-foreground">
+              No job descriptions found.
             </TableCell>
           </TableRow>
-        ))}
+        )}
       </TableBody>
     </Table>
   )
