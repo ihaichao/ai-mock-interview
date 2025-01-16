@@ -5,7 +5,7 @@ import { Phone, Camera, Subtitles, Play, Square } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
-export default function InterviewRoom({ params }: { params: { id: string } }) {
+export default function InterviewRoom() {
   const [time, setTime] = useState(0)
   const [answerTime, setAnswerTime] = useState(0)
   const [isAnswering, setIsAnswering] = useState(false)

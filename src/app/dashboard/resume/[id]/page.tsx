@@ -6,13 +6,7 @@ import useSWRMutation from "swr/mutation"
 import { API_ROUTES, fetchResumeDetail } from "@/services/api"
 import { WorkExperience, ProjectExperience, Education } from '@/services/types'
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function ResumePage({ params }: PageProps) {
+export default function ResumePage({ params }: { params: any }) {
   const { trigger: fetchResume, data, error, isMutating } = useSWRMutation(
     `${API_ROUTES.FETCH_RESUME_DETAIL}`,
     () => fetchResumeDetail(params.id)

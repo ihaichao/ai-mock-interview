@@ -1,7 +1,6 @@
 "use client"
 
 import { useForm } from "react-hook-form"
-import { Sidebar } from "@/components/dashboard/sidebar"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { z } from "zod"
@@ -124,6 +123,7 @@ export default function CreateResumePage() {
         })
       }
     } catch (error) {
+      console.log("error", error)
       toast({
         title: "Error",
         description: "An error occurred while creating the resume",

@@ -19,7 +19,7 @@ export async function fetchApi<TResponse, TRequest = any>(
   }
 
   let finalUrl = API_BASE_URL + url
-  let requestOptions: RequestInit = {
+  const requestOptions: RequestInit = {
     method,
     mode: 'cors',
     headers

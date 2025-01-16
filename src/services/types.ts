@@ -79,10 +79,10 @@ export interface Education {
 export interface CreateResumeRequest {
   title: string
   type: string
-  personInfo: PersonalInfo
-  workExperience: WorkExperience[]
-  projectExperience: ProjectExperience[]
-  education: Education[]
+  personInfo: string
+  workExperience: string
+  projectExperience: string
+  education: string
 }
 
 export interface CreateResumeResponse extends ApiResponse {}
