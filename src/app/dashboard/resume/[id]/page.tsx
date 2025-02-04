@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import useSWRMutation from "swr/mutation"
 import { API_ROUTES, fetchResumeDetail } from "@/services/api"
 import { WorkExperience, ProjectExperience, Education } from '@/services/types'
+import { formatDate } from "@/lib/utils"
 
 export default function ResumePage({ params }: { params: any }) {
   const { trigger: fetchResume, data, error, isMutating } = useSWRMutation(
@@ -44,7 +45,7 @@ export default function ResumePage({ params }: { params: any }) {
 
   return (
     <div className="container mx-auto py-6">
-      {/* <h1 className="text-2xl font-bold mb-6">简历详情</h1> */}
+      <h1 className="text-2xl font-bold mb-6">简历详情</h1>
       
       <Card>
         <CardContent className="p-6 space-y-6">
@@ -55,27 +56,27 @@ export default function ResumePage({ params }: { params: any }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-500">Name</label>
-                <p>{resumeData?.personalInfo?.name || '-'}</p>
+                <p>{resumeData?.personInfo?.name || '-'}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">Location</label>
-                <p>{resumeData?.personalInfo?.location || '-'}</p>
+                <p>{resumeData?.personInfo?.location || '-'}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">Phone</label>
-                <p>{resumeData?.personalInfo?.phone || '-'}</p>
+                <p>{resumeData?.personInfo?.phone || '-'}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">Email</label>
-                <p>{resumeData?.personalInfo?.email || '-'}</p>
+                <p>{resumeData?.personInfo?.email || '-'}</p>
               </div>
               <div className="col-span-2">
                 <label className="text-sm text-gray-500">LinkedIn</label>
-                <p>{resumeData?.personalInfo?.linkedinUrl || '-'}</p>
+                <p>{resumeData?.personInfo?.linkedinUrl || '-'}</p>
               </div>
               <div className="col-span-2">
                 <label className="text-sm text-gray-500">Introduction</label>
-                <p>{resumeData?.personalInfo?.introduction || '-'}</p>
+                <p>{resumeData?.personInfo?.personIntroduction || '-'}</p>
               </div>
             </div>
           </div>
@@ -97,7 +98,7 @@ export default function ResumePage({ params }: { params: any }) {
                     </div>
                     <div>
                       <label className="text-sm text-gray-500">Period</label>
-                      <p>{work.startTime} - {work.endTime}</p>
+                      <p>{formatDate(work.startTime)} - {formatDate(work.endTime)}</p>
                     </div>
                     <div className="col-span-2">
                       <label className="text-sm text-gray-500">Description</label>

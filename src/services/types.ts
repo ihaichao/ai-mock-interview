@@ -98,3 +98,19 @@ export interface FetchResumeDetailResponse extends ApiResponse {
   projectExperience: string
   education: string
 }
+
+export interface CreateInterviewRequest {
+  resumeId: string
+  jobId: string
+}
+
+export interface CreateInterviewResponse extends ApiResponse<string> {}
+
+export interface StartInterviewRequest {
+  interviewId: string
+}
+
+export interface StartInterviewResponse extends ApiResponse {
+  res: string
+  interviewId: string
+}

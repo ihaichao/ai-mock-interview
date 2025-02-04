@@ -1,14 +1,19 @@
 "use client"
 
+import { useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import useSWRMutation from "swr/mutation"
+import { API_ROUTES, fetchResumeList, fetchJDList, createInterview } from "@/services/api"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/components/hooks/use-toast"
 
 interface MockInterviewDialogProps {
   open: boolean
@@ -25,6 +30,28 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogProps) {
+  const router = useRouter()
+  const { toast } = useToast()
+
+  // Fetch resume list
+  const { trigger: fetchResumes, data: resumeData } = useSWRMutation<any>(
+    API_ROUTES.FETCH_RESUME_LIST,
+    fetchResumeList
+  )
+
+  // Fetch job list
+  const { trigger: fetchJDs, data: jobData } = useSWRMutation<any>(
+    API_ROUTES.GET_JD_LIST,
+    fetchJDList
+  )
+
+  // Start interview mutation
+  const { trigger: startInterviewTrigger, isMutating: isStarting } = useSWRMutation(
+    API_ROUTES.CREATE_INTERVIEW,
+    (key, { arg }) => createInterview(arg)
+  )
+
+  // Initialize form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,9 +62,44 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
     },
   })
 
-  const onSubmit = (data: FormData) => {
-    console.log(data)
-    onOpenChange(false)
+  // Fetch data when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchResumes()
+      fetchJDs()
+    }
+  }, [open, fetchResumes, fetchJDs])
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      const result = await startInterviewTrigger({
+        resumeId: data.resume,
+        jobId: data.job,
+      })
+
+      if (result.status) {
+        toast({
+          title: "Success",
+          description: "Interview session created successfully",
+        })
+        onOpenChange(false)
+        // Redirect to interview room with the interview ID
+        router.push(`/dashboard/interview/${result.data}`)
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.message || "Failed to start interview",
+        })
+      }
+    } catch (error) {
+      console.error('Start interview error:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to start interview session",
+      })
+    }
   }
 
   return (
@@ -65,12 +127,20 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
                   <FormLabel className="text-sm font-medium text-[#2D2D2D]">
                     Resume <span className="text-red-500">*</span>
                   </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base">
+                        <SelectValue placeholder="Select a resume" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {resumeData?.data?.map((resume: any) => (
+                        <SelectItem key={resume.resumeId} value={resume.resumeId}>
+                          {resume.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
@@ -84,12 +154,20 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
                   <FormLabel className="text-sm font-medium text-[#2D2D2D]">
                     Job <span className="text-red-500">*</span>
                   </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base placeholder:text-[#6C757D]"
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-12 rounded-xl bg-[#F8F9FA] px-4 text-base">
+                        <SelectValue placeholder="Select a job" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {jobData?.data?.map((job: any) => (
+                        <SelectItem key={job.jdId} value={job.jdId}>
+                          {job.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
@@ -147,8 +225,9 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
             <Button
               type="submit"
               className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white hover:bg-black/90"
+              disabled={isStarting}
             >
-              Subscribe
+              {isStarting ? "Starting..." : "Create Interview"}
             </Button>
           </form>
         </Form>

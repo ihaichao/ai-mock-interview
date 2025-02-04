@@ -1,30 +1,69 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { Phone, Camera, Subtitles, Play, Square } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/hooks/use-toast"
+import { textToVoice, startInterview } from "@/services/api"
 
-export default function InterviewRoom() {
+export default function InterviewRoom({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
   const [time, setTime] = useState(0)
   const [answerTime, setAnswerTime] = useState(0)
   const [isAnswering, setIsAnswering] = useState(false)
   const [cameraOff, setCameraOff] = useState(false)
   const [subtitlesOff, setSubtitlesOff] = useState(false)
+  const [hasAudioPermission, setHasAudioPermission] = useState<boolean | null>(null)
   const answerTimerRef = useRef<NodeJS.Timeout>()
   const router = useRouter()
+  const { toast } = useToast()
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
+  const wsRef = useRef<WebSocket | null>(null)
+  const [interviewStarted, setInterviewStarted] = useState(false)
+  const [openingStatement, setOpeningStatement] = useState("")
+
+  // 检查麦克风权限
+  useEffect(() => {
+    async function checkAudioPermission() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        // 获取权限成功
+        setHasAudioPermission(true)
+        // 停止所有音轨
+        stream.getTracks().forEach(track => track.stop())
+      } catch (err) {
+        // 用户拒绝或获取权限失败
+        setHasAudioPermission(false)
+        toast({
+          variant: "destructive",
+          title: "Permission Denied",
+          description: "Microphone access is required for the interview. Please enable it and try again.",
+        })
+        // 3秒后返回面试列表页
+        setTimeout(() => {
+          router.push('/dashboard/interview')
+        }, 3000)
+      }
+    }
+
+    checkAudioPermission()
+  }, [router, toast])
 
   // Main timer effect
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTime((prevTime) => prevTime + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    // 只有在获得麦克风权限后才启动计时器
+    if (hasAudioPermission) {
+      const interval = setInterval(() => {
+        setTime((prevTime) => prevTime + 1)
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [hasAudioPermission])
 
   // Answer timer effect
   useEffect(() => {
-    if (isAnswering) {
+    if (isAnswering && hasAudioPermission) {
       answerTimerRef.current = setInterval(() => {
         setAnswerTime((prevTime) => prevTime + 1)
       }, 1000)
@@ -34,7 +73,95 @@ export default function InterviewRoom() {
         clearInterval(answerTimerRef.current)
       }
     }
-  }, [isAnswering])
+  }, [isAnswering, hasAudioPermission])
+
+  // 初始化 AudioContext
+  useEffect(() => {
+    // AudioContext 需要在用户交互后创建
+    const context = new (window.AudioContext || window.webkitAudioContext)()
+    setAudioContext(context)
+
+    return () => {
+      context.close()
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+    }
+  }, [])
+
+  // 开始面试，获取开场白
+  useEffect(() => {
+    async function initInterview() {
+      if (!hasAudioPermission || interviewStarted) return
+
+      try {
+        const result = await startInterview(resolvedParams.id)
+        if (result.status && result.data?.res) {
+          setOpeningStatement(result.data.res)
+          setInterviewStarted(true)
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: result.message || "Failed to start interview",
+          })
+        }
+      } catch (error) {
+        console.error('Start interview error:', error)
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to start interview",
+        })
+      }
+    }
+
+    if (hasAudioPermission) {
+      initInterview()
+    }
+  }, [hasAudioPermission, resolvedParams.id, interviewStarted, toast])
+
+  // 监听开场白变化，自动播放
+  useEffect(() => {
+    if (openingStatement && audioContext) {
+      // 关闭之前的连接
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+
+      // 创建新的 WebSocket 连接
+      wsRef.current = textToVoice(openingStatement, (audioBuffer) => {
+        // 解码音频数据
+        audioContext.decodeAudioData(audioBuffer, (decodedData) => {
+          // 创建音频源
+          const source = audioContext.createBufferSource()
+          source.buffer = decodedData
+          
+          // 连接到扬声器
+          source.connect(audioContext.destination)
+          
+          // 播放音频
+          source.start(0)
+        }).catch(error => {
+          console.error('Error decoding audio data:', error)
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to play audio",
+          })
+        })
+      })
+    }
+  }, [openingStatement, audioContext, toast])
+
+  // 在组件卸载时清理
+  useEffect(() => {
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+    }
+  }, [])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -53,6 +180,31 @@ export default function InterviewRoom() {
     }
   }
 
+  // 如果权限状态还未确定，显示加载状态
+  if (hasAudioPermission === null) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F8F9FA]">
+        <div className="text-center">
+          <p className="mb-2 text-lg">Requesting microphone permission...</p>
+          <p className="text-sm text-gray-500">Please allow microphone access to continue</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果没有权限，显示错误状态（虽然会很快重定向）
+  if (!hasAudioPermission) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F8F9FA]">
+        <div className="text-center text-red-500">
+          <p className="mb-2 text-lg">Microphone access denied</p>
+          <p className="text-sm">Redirecting to interview list...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 原有的渲染逻辑
   return (
     <div className="flex h-screen flex-col bg-[#F8F9FA]">
       {/* Header */}
@@ -118,14 +270,15 @@ export default function InterviewRoom() {
 
           {/* Interviewer's Voice Record */}
           <div className="h-[400px] overflow-y-auto rounded-xl bg-white p-4 shadow-sm">
-            <h3 className="mb-2 font-medium text-[#2D2D2D]">Interviewer's Voice Record</h3>
+            <div className="mb-4">
+              <h3 className="font-medium text-[#2D2D2D]">Interviewer's Voice Record</h3>
+            </div>
             <div className="space-y-2">
-              <p className="text-sm text-[#6C757D]">00:05 - Can you tell me about your experience with Java?</p>
-              <p className="text-sm text-[#6C757D]">00:15 - How have you used Spring Framework in your projects?</p>
-              <p className="text-sm text-[#6C757D]">00:30 - Can you explain the concept of dependency injection?</p>
-              <p className="text-sm text-[#6C757D]">00:45 - What's your experience with microservices architecture?</p>
-              <p className="text-sm text-[#6C757D]">01:00 - How do you handle concurrency in Java?</p>
-              <p className="text-sm text-[#6C757D]">01:15 - Can you describe a challenging project you've worked on?</p>
+              {openingStatement && (
+                <p className="text-sm text-[#6C757D]">
+                  00:00 - {openingStatement}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -173,24 +326,6 @@ export default function InterviewRoom() {
                   <li>Referring to my role in overseeing technology and architeture initiatives.</li>
                   <li>interested in discussing the strategies implemented in a recent launch.</li>
                   <li>Aiming to highlight the outcomes and impact achieved through the technology solutions</li>
-                </ul>
-              </div>
-
-              <div className="rounded-xl bg-[#F8F9FA] p-4">
-                <div className="text-[#6C757D]">00:20</div>
-                <p className="mt-2 text-[#2D2D2D]">
-                  I'm still unclear on what you're referring to. Are you asking about a specific product launch or a project idea? Can you give more details?
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-[#6C757D]">00:25</div>
-                <ul className="list-disc space-y-2 pl-5 text-[#2D2D2D]">
-                  <li>Referring to the transformation of an existing merchant platform through Domain-Driven Design</li>
-                  <li>Reduced onboarding time for independent sites from 45 to 7 days and for new business onboarding ur day</li>
-                  <li>Led Sub-project 2: Migrated 90% of warehouse distribution and RSs business systems to the cloud, relcapabilities, and system boundaries</li>
-                  <li>Led Sub-project 1: Collaborated with international mid-end, Lazada trading platform, and Redmart technology teams to define technical boundaries and coordinate across teams</li>
-                  <li>Project challenges: Juhuasuan faced issues integrating personalized businesses into merchant access</li>
                 </ul>
               </div>
             </div>

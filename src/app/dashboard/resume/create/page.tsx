@@ -19,7 +19,7 @@ const personalInfoSchema = z.object({
   phone: z.string().optional(),
   email: z.string().optional(),
   linkedinUrl: z.string().optional(),
-  introduction: z.string().optional(),
+  personIntroduction: z.string().optional(),
 })
 
 const workExperienceSchema = z.object({

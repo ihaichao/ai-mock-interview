@@ -1,6 +1,7 @@
 interface RequestOptions<T> {
   arg?: T
   method?: 'GET' | 'POST'
+  headers?: Record<string, string>
 }
 
 // Base API configuration
@@ -10,9 +11,9 @@ const API_BASE_URL = process.env.NODE_ENV === 'development'
 
 export async function fetchApi<TResponse, TRequest = any>(
   url: string, 
-  { arg, method = 'POST' }: RequestOptions<TRequest>
+  { arg, method = 'POST', headers }: RequestOptions<TRequest>
 ): Promise<TResponse> {
-  const headers = {
+  const defaultHeaders = {
     'Content-Type': 'application/json',
     'X-Token': localStorage.getItem('token') || '',
     'X-Email': localStorage.getItem('email') || '',
@@ -22,7 +23,10 @@ export async function fetchApi<TResponse, TRequest = any>(
   const requestOptions: RequestInit = {
     method,
     mode: 'cors',
-    headers
+    headers: {
+      ...defaultHeaders,
+      ...headers
+    }
   }
 
   // 如果是 GET 请求，将参数添加到 URL 上
@@ -55,4 +59,4 @@ export async function fetchApi<TResponse, TRequest = any>(
   }
 
   return data
-} 
+}
