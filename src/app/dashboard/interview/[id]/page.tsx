@@ -33,6 +33,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
         // 停止所有音轨
         stream.getTracks().forEach(track => track.stop())
       } catch (err) {
+        console.log(err)
         // 用户拒绝或获取权限失败
         setHasAudioPermission(false)
         toast({
