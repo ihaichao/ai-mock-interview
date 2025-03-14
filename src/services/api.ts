@@ -1,4 +1,4 @@
-import { fetchApi } from './fetch'
+import { fetchApi, fetchSSE } from './fetch'
 import { 
   CreateAccountRequest, 
   CreateAccountResponse, 
@@ -16,7 +16,7 @@ import {
   CreateInterviewRequest,
   CreateInterviewResponse,
   StartInterviewRequest,
-  StartInterviewResponse
+  StartInterviewResponse,
 } from './types'
 
 export const API_ROUTES = {
@@ -30,7 +30,9 @@ export const API_ROUTES = {
   FETCH_RESUME_DETAIL: '/mockInterview/resume/getById',
   CREATE_INTERVIEW: '/mockInterview/interview/create',
   START_INTERVIEW: '/mockInterview/interview/start',
-  TEXT_TO_VOICE: '/text-to-voice'
+  VOICE_FILE_TO_TEXT: '/file/voice-to-text',
+  START_CHAT: '/mockInterview/interview/startChat',
+  UPLOAD_RESUME: '/mockInterview/resume/upload'
 } as const
 
 
@@ -51,7 +53,18 @@ export const startInterview = (interviewId: string) => fetchApi<StartInterviewRe
   { method: 'GET', arg: { interviewId } }
 )
 
-// Add this new function for WebSocket text-to-voice
+export async function voiceFileToText(formData: FormData) {
+  const response = await fetch('/file/voice-to-text', {
+    method: 'POST',
+    headers: {
+      'X-Token': localStorage.getItem('token') || '',
+      'X-Email': localStorage.getItem('email') || '',
+    },
+    body: formData
+  })
+  return response.json()
+}
+
 export const textToVoice = (text: string, onMessage: (audio: ArrayBuffer) => void): WebSocket => {
   // Create WebSocket connection
   const ws = new WebSocket('/text-to-voice')
@@ -77,4 +90,92 @@ export const textToVoice = (text: string, onMessage: (audio: ArrayBuffer) => voi
 
   // Return the WebSocket instance so the caller can close it when needed
   return ws
+}
+
+export const voiceStreamToText = (onMessage: (text: string) => void): {
+  ws: WebSocket;
+  start: (audioChunk: Blob) => void;
+  stop: () => void;
+} => {
+  const ws = new WebSocket('/voice-to-text')
+  
+  ws.onopen = () => {
+    console.log('Voice to text WebSocket connection established')
+  }
+  
+  ws.onmessage = (event) => {
+    console.log('Voice to text WebSocket message received:', event)
+    try {
+      onMessage(event.data)
+    } catch (error) {
+      console.error('Error parsing voice-to-text response:', error)
+    }
+  }
+
+  ws.onerror = (error) => {
+    console.error('WebSocket Error:', error)
+  }
+
+  // 修改发送数据的方式
+  const start = (audioChunk: Blob) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      // 将 Blob 转换为 ArrayBuffer
+      audioChunk.arrayBuffer().then(buffer => {
+        // 发送原始二进制数据
+        ws.send(buffer)
+      }).catch(error => {
+        console.error('Error converting blob to binary:', error)
+      })
+    } else {
+      console.warn('WebSocket not open, state:', ws.readyState)
+    }
+  }
+
+  const stop = () => {
+    if (ws.readyState === WebSocket.OPEN) {
+      // ws.send(JSON.stringify({ command: 'stop' }))
+    }
+  }
+
+  return {
+    ws,
+    start,
+    stop
+  }
+}
+
+interface StartChatRequest {
+  interviewId: string
+  userInput: string
+}
+
+export const startChat = (
+  params: StartChatRequest,
+  onMessage: (data: any) => void,
+  onError?: (error: any) => void
+) => {
+  return fetchSSE<StartChatRequest>(
+    API_ROUTES.START_CHAT,
+    {
+      arg: params,
+      onMessage,
+      onError
+    }
+  )
+}
+
+export const uploadResume = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return fetchApi<any, FormData>(
+    API_ROUTES.UPLOAD_RESUME, 
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      arg: formData
+    }
+  );
 }

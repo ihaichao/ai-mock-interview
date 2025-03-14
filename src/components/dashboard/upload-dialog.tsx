@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { FileText } from 'lucide-react'
+import { uploadResume } from "@/services/api"
+import { useToast } from "@/components/hooks/use-toast"
 
 interface UploadDialogProps {
   open: boolean
@@ -18,7 +20,9 @@ interface UploadDialogProps {
 export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -39,12 +43,42 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
     }
   }
 
-  const handleUpload = () => {
-    if (file) {
-      // Here you would typically send the file to your server
-      console.log("Uploading file:", file.name)
-      // After successful upload:
-      onOpenChange(false)
+  const handleUpload = async () => {
+    if (!file) {
+      setError("Please select a file to upload.")
+      return
+    }
+
+    try {
+      setIsUploading(true)
+      const response = await uploadResume(file)
+      
+      if (response.status === 'success') {
+        toast({
+          title: "Success",
+          description: "Resume uploaded successfully",
+        })
+        onOpenChange(false)
+        // 可以在这里添加刷新简历列表的逻辑
+        window.location.reload() // 简单的刷新页面方式
+      } else {
+        setError(response.message || "Failed to upload resume")
+        toast({
+          variant: "destructive",
+          title: "Upload failed",
+          description: response.message || "Failed to upload resume",
+        })
+      }
+    } catch (error) {
+      console.error("Error uploading resume:", error)
+      setError("An error occurred while uploading the resume")
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: "An error occurred while uploading the resume",
+      })
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -106,8 +140,9 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
             size="lg"
             className="h-10 rounded-full bg-black text-sm font-medium text-white"
             onClick={handleUpload}
+            disabled={isUploading || !file}
           >
-            Save
+            {isUploading ? "Uploading..." : "Save"}
           </Button>
         </div>
       </DialogContent>

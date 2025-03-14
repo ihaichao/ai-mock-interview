@@ -114,3 +114,7 @@ export interface StartInterviewResponse extends ApiResponse {
   res: string
   interviewId: string
 }
+
+export interface VoiceFileToTextResponse extends ApiResponse {
+  text: string
+}

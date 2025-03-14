@@ -13,7 +13,7 @@ import useSWRMutation from "swr/mutation"
 import { API_ROUTES, fetchJDList } from "@/services/api"
 
 interface JD {
-  id: string
+  jdId: string
   title: string
   company: string
   companyDetail: string
@@ -56,7 +56,7 @@ export function JDTable() {
       <TableBody>
         {jdList?.length ? (
           jdList.map((jd: JD) => (
-            <TableRow key={jd.id} className="border-b">
+            <TableRow key={jd.jdId} className="border-b">
               <TableCell className="py-4 font-medium">{jd.title}</TableCell>
               <TableCell className="py-4">{jd.company}</TableCell>
               <TableCell className="py-4">{new Date(jd.createdAt).toLocaleDateString()}</TableCell>

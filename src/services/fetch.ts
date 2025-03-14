@@ -4,6 +4,12 @@ interface RequestOptions<T> {
   headers?: Record<string, string>
 }
 
+interface SSEOptions<T> {
+  arg: T
+  onMessage: (data: any) => void
+  onError?: (error: any) => void
+}
+
 // Base API configuration
 const API_BASE_URL = process.env.NODE_ENV === 'development' 
   ? '' 
@@ -43,7 +49,12 @@ export async function fetchApi<TResponse, TRequest = any>(
     }
   } else if (method === 'POST' && arg) {
     // POST 请求将参数放在 body 中
-    requestOptions.body = JSON.stringify(arg)
+    requestOptions.body = headers?.['Content-Type'] === 'multipart/form-data' 
+      ? (arg instanceof FormData ? arg : Object.entries(arg).reduce((formData, [key, value]) => {
+          formData.append(key, value as string);
+          return formData;
+        }, new FormData()))
+      : JSON.stringify(arg)
   }
 
   const response = await fetch(finalUrl, requestOptions)
@@ -59,4 +70,64 @@ export async function fetchApi<TResponse, TRequest = any>(
   }
 
   return data
+}
+
+export async function fetchSSE<TRequest>(
+  url: string,
+  { arg, onMessage, onError }: SSEOptions<TRequest>
+) {
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    'X-Token': localStorage.getItem('token') || '',
+    'X-Email': localStorage.getItem('email') || '',
+  }
+
+  const finalUrl = API_BASE_URL + url
+  const response = await fetch(finalUrl, {
+    method: 'POST',
+    headers: defaultHeaders,
+    body: JSON.stringify(arg)
+  })
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok')
+  }
+
+  const reader = response.body?.getReader()
+  const decoder = new TextDecoder()
+
+  if (!reader) {
+    throw new Error('Failed to get response reader')
+  }
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      
+      if (done) {
+        break
+      }
+
+      // Decode the received chunk
+      const chunk = decoder.decode(value)
+      
+      // Split the chunk into lines and process each line
+      const lines = chunk.split('\n')
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          try {
+            const data = JSON.parse(line.slice(5))
+            onMessage(data)
+          } catch (error) {
+            console.error('Error parsing SSE data:', error)
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('SSE Error:', error)
+    onError?.(error)
+  } finally {
+    reader.cancel()
+  }
 }

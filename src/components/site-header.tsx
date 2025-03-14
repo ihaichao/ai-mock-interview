@@ -18,13 +18,13 @@ export function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-2 md:gap-3">
-          <Button 
+          {/* <Button 
             variant="outline" 
             className="h-8 md:h-9 rounded-[8px] border-[#E5E7EB] px-3 md:px-4 text-xs md:text-sm font-medium text-[#2D2D2D] hover:bg-gray-50"
             asChild
           >
             <Link href="/sign-in">Sign In</Link>
-          </Button>
+          </Button> */}
           <Button 
             className="h-8 md:h-9 rounded-[8px] bg-[#4AE68A] px-3 md:px-4 text-xs md:text-sm font-medium text-white hover:bg-[#3dd17a]"
             asChild

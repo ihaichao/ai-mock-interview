@@ -1,47 +1,49 @@
 "use client"
 
 import { useState, useEffect, useRef, use } from "react"
-import { Phone, Camera, Subtitles, Play, Square } from 'lucide-react'
+import { Phone, Play, Square } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/hooks/use-toast"
-import { textToVoice, startInterview } from "@/services/api"
+import { startInterview, textToVoice } from "@/services/api"
+import { useInterviewChat } from "@/hooks/useInterviewChat"
+import { useAudioRecorder } from "@/hooks/useAudioRecorder"
+import { LoadingIndicator } from "@/components/ui/loading-indicator"
+import { playAudio } from "@/lib/utils"
 
 export default function InterviewRoom({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const [time, setTime] = useState(0)
-  const [answerTime, setAnswerTime] = useState(0)
-  const [isAnswering, setIsAnswering] = useState(false)
-  const [cameraOff, setCameraOff] = useState(false)
-  const [subtitlesOff, setSubtitlesOff] = useState(false)
   const [hasAudioPermission, setHasAudioPermission] = useState<boolean | null>(null)
-  const answerTimerRef = useRef<NodeJS.Timeout>()
+  const [, setAudioContext] = useState<AudioContext | null>(null)
   const router = useRouter()
   const { toast } = useToast()
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const [interviewStarted, setInterviewStarted] = useState(false)
   const [openingStatement, setOpeningStatement] = useState("")
+  const { chatMessages, isChatLoading, sendMessage } = useInterviewChat(resolvedParams.id)
+  const { 
+    isRecording, 
+    transcripts, 
+    isConverting, 
+    toggleRecording 
+  } = useAudioRecorder()
 
-  // 检查麦克风权限
+  // Check microphone permission
   useEffect(() => {
     async function checkAudioPermission() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        // 获取权限成功
         setHasAudioPermission(true)
-        // 停止所有音轨
         stream.getTracks().forEach(track => track.stop())
       } catch (err) {
         console.log(err)
-        // 用户拒绝或获取权限失败
         setHasAudioPermission(false)
         toast({
           variant: "destructive",
           title: "Permission Denied",
           description: "Microphone access is required for the interview. Please enable it and try again.",
         })
-        // 3秒后返回面试列表页
         setTimeout(() => {
           router.push('/dashboard/interview')
         }, 3000)
@@ -51,35 +53,8 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     checkAudioPermission()
   }, [router, toast])
 
-  // Main timer effect
   useEffect(() => {
-    // 只有在获得麦克风权限后才启动计时器
-    if (hasAudioPermission) {
-      const interval = setInterval(() => {
-        setTime((prevTime) => prevTime + 1)
-      }, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [hasAudioPermission])
-
-  // Answer timer effect
-  useEffect(() => {
-    if (isAnswering && hasAudioPermission) {
-      answerTimerRef.current = setInterval(() => {
-        setAnswerTime((prevTime) => prevTime + 1)
-      }, 1000)
-    }
-    return () => {
-      if (answerTimerRef.current) {
-        clearInterval(answerTimerRef.current)
-      }
-    }
-  }, [isAnswering, hasAudioPermission])
-
-  // 初始化 AudioContext
-  useEffect(() => {
-    // AudioContext 需要在用户交互后创建
-    const context = new (window.AudioContext || window.webkitAudioContext)()
+    const context = new (window.AudioContext)
     setAudioContext(context)
 
     return () => {
@@ -90,7 +65,17 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     }
   }, [])
 
-  // 开始面试，获取开场白
+  // Main timer effect
+  useEffect(() => {
+    if (hasAudioPermission) {
+      const interval = setInterval(() => {
+        setTime((prevTime) => prevTime + 1)
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [hasAudioPermission])
+
+  // Start interview, get opening statement
   useEffect(() => {
     async function initInterview() {
       if (!hasAudioPermission || interviewStarted) return
@@ -100,6 +85,12 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
         if (result.status && result.data?.res) {
           setOpeningStatement(result.data.res)
           setInterviewStarted(true)
+          
+          // Convert opening statement to speech
+          wsRef.current = textToVoice(result.data.res, (audioBuffer) => {
+            console.log("Received audio buffer, playing...", audioBuffer.byteLength)
+            playAudio(audioBuffer)
+          })
         } else {
           toast({
             variant: "destructive",
@@ -122,48 +113,6 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     }
   }, [hasAudioPermission, resolvedParams.id, interviewStarted, toast])
 
-  // 监听开场白变化，自动播放
-  useEffect(() => {
-    if (openingStatement && audioContext) {
-      // 关闭之前的连接
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
-
-      // 创建新的 WebSocket 连接
-      wsRef.current = textToVoice(openingStatement, (audioBuffer) => {
-        // 解码音频数据
-        audioContext.decodeAudioData(audioBuffer, (decodedData) => {
-          // 创建音频源
-          const source = audioContext.createBufferSource()
-          source.buffer = decodedData
-          
-          // 连接到扬声器
-          source.connect(audioContext.destination)
-          
-          // 播放音频
-          source.start(0)
-        }).catch(error => {
-          console.error('Error decoding audio data:', error)
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to play audio",
-          })
-        })
-      })
-    }
-  }, [openingStatement, audioContext, toast])
-
-  // 在组件卸载时清理
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
-    }
-  }, [])
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -174,14 +123,14 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     router.push('/dashboard/interview')
   }
 
-  const toggleAnswering = () => {
-    setIsAnswering(!isAnswering)
-    if (!isAnswering) {
-      setAnswerTime(0) // Reset answer timer when starting
-    }
+  const handleToggleRecording = async () => {
+    await toggleRecording(time, async (transcript) => {
+      // Send the transcript to the interviewer
+      await sendMessage(transcript.text, transcript.time)
+    })
   }
 
-  // 如果权限状态还未确定，显示加载状态
+  // If permission status is not determined yet, show loading state
   if (hasAudioPermission === null) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F8F9FA]">
@@ -193,7 +142,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     )
   }
 
-  // 如果没有权限，显示错误状态（虽然会很快重定向）
+  // If no permission, show error state (will redirect soon)
   if (!hasAudioPermission) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F8F9FA]">
@@ -205,7 +154,6 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     )
   }
 
-  // 原有的渲染逻辑
   return (
     <div className="flex h-screen flex-col bg-[#F8F9FA]">
       {/* Header */}
@@ -233,40 +181,8 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
         {/* Video and Interviewer's Voice Record Section */}
         <div className="flex w-[480px] flex-col gap-4 overflow-hidden">
           {/* Video Section */}
-          <div className="relative flex-1 overflow-hidden rounded-xl bg-black">
-            <video
-              className={`h-full w-full object-cover ${cameraOff ? 'hidden' : ''}`}
-              autoPlay
-              muted
-              playsInline
-            />
-            {cameraOff && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#2D2D2D]">
-                <div className="h-24 w-24 rounded-full bg-[#4A4A4A]" />
-              </div>
-            )}
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCameraOff(!cameraOff)}
-                className={`h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 ${
-                  cameraOff ? 'text-red-500' : 'text-white'
-                }`}
-              >
-                <Camera className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSubtitlesOff(!subtitlesOff)}
-                className={`h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 ${
-                  subtitlesOff ? 'text-red-500' : 'text-white'
-                }`}
-              >
-                <Subtitles className="h-5 w-5" />
-              </Button>
-            </div>
+          <div className="relative h-[270px] overflow-hidden rounded-xl">
+            <img src="/interviewer.jpg" alt="interviewer" className="w-full rounded-xl" />
           </div>
 
           {/* Interviewer's Voice Record */}
@@ -275,10 +191,25 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
               <h3 className="font-medium text-[#2D2D2D]">Interviewer's Voice Record</h3>
             </div>
             <div className="space-y-2">
-              {openingStatement && (
-                <p className="text-sm text-[#6C757D]">
-                  00:00 - {openingStatement}
-                </p>
+              {!openingStatement ? (
+                <LoadingIndicator message="Starting interview..." className="mt-2" />
+              ) : (
+                <>
+                  {openingStatement && (
+                    <p className="text-sm text-[#6C757D]">
+                      00:00 - {openingStatement}
+                    </p>
+                  )}
+                  {chatMessages.map((message, index) => (
+                    <p key={index} className="text-sm text-[#6C757D]">
+                      {formatTime(message.time)} - {message.content}
+                    </p>
+                  ))}
+                </>
+              )}
+              
+              {isChatLoading && (
+                <LoadingIndicator message="Interviewer is thinking..." className="mt-2" />
               )}
             </div>
           </div>
@@ -293,18 +224,14 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {isAnswering && (
-                <span className="text-sm text-[#6C757D]">
-                  {formatTime(answerTime)}
-                </span>
-              )}
               <Button
-                variant={isAnswering ? "destructive" : "default"}
+                variant={isRecording ? "destructive" : "default"}
                 size="sm"
-                onClick={toggleAnswering}
+                onClick={handleToggleRecording}
                 className="gap-2"
+                disabled={isConverting || !openingStatement}
               >
-                {isAnswering ? (
+                {isRecording ? (
                   <>
                     <Square className="h-4 w-4" />
                     Stop
@@ -321,14 +248,20 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
 
           <div className="flex-1 overflow-y-auto">
             <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="text-[#6C757D]">00:18</div>
-                <ul className="list-disc space-y-2 pl-5 text-[#2D2D2D]">
-                  <li>Referring to my role in overseeing technology and architeture initiatives.</li>
-                  <li>interested in discussing the strategies implemented in a recent launch.</li>
-                  <li>Aiming to highlight the outcomes and impact achieved through the technology solutions</li>
-                </ul>
-              </div>
+              {transcripts.map((transcript, index) => (
+                <div key={index} className="rounded-lg bg-[#F8F9FA] p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs text-[#6C757D]">{formatTime(transcript.time)}</span>
+                  </div>
+                  <p className="text-sm text-[#2D2D2D]">{transcript.text}</p>
+                </div>
+              ))}
+              
+              {isConverting && (
+                <div className="text-center">
+                  <LoadingIndicator message="Converting your answer..." />
+                </div>
+              )}
             </div>
           </div>
         </div>

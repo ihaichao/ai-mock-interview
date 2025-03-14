@@ -1,8 +1,11 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { LogOut } from 'lucide-react'
+import { useAuth } from "@/hooks/useAuth"
+import { useToast } from "@/components/hooks/use-toast"
 
 interface SettingsDialogProps {
   open: boolean
@@ -10,6 +13,26 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+  const { logout } = useAuth()
+  const { toast } = useToast()
+  const [email, setEmail] = useState<string>("")
+
+  // Safely access localStorage only on the client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setEmail(localStorage.getItem("email") || "")
+    }
+  }, [])
+
+  const handleLogout = () => {
+    logout()
+    onOpenChange(false)
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out."
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] p-6">
@@ -21,7 +44,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           {/* Email Section */}
           <div className="space-y-2">
             <h3 className="text-base font-medium text-[#2D2D2D]">Email</h3>
-            <p className="text-[#6C757D]">8376461364@gmail.com</p>
+            <p className="text-[#6C757D]">{email}</p>
           </div>
 
           {/* Password Section */}
@@ -64,6 +87,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <Button 
             variant="outline" 
             className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border-[#E5E7EB] py-6 text-base font-medium text-[#2D2D2D]"
+            onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />
             Log out

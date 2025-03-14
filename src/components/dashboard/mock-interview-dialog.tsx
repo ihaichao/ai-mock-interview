@@ -75,7 +75,7 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
       const result = await startInterviewTrigger({
         resumeId: data.resume,
         jobId: data.job,
-      })
+      } as any)
 
       if (result.status) {
         toast({
@@ -135,7 +135,7 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
                     </FormControl>
                     <SelectContent>
                       {resumeData?.data?.map((resume: any) => (
-                        <SelectItem key={resume.resumeId} value={resume.resumeId}>
+                        <SelectItem key={resume.resumeId} value={String(resume.resumeId)}>
                           {resume.title}
                         </SelectItem>
                       ))}
@@ -162,7 +162,7 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
                     </FormControl>
                     <SelectContent>
                       {jobData?.data?.map((job: any) => (
-                        <SelectItem key={job.jdId} value={job.jdId}>
+                        <SelectItem key={job.jdId} value={String(job.jdId)}>
                           {job.title}
                         </SelectItem>
                       ))}

@@ -16,11 +16,11 @@ export default function ProfilePage() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         {/* Profile Section */}
         <div className="mb-8 flex items-center gap-6">
-          <img
+          {/* <img
             src="https://kzmkgmfxtdfapl5x3wog.lite.vusercontent.net/placeholder.svg?height=120&width=120"
             alt="Profile"
             className="h-[120px] w-[120px] rounded-full object-cover"
-          />
+          /> */}
           <div>
             <div className="mb-2 flex items-center gap-3">
               <h2 className="text-2xl font-medium text-[#2D2D2D]">Echo Li</h2>

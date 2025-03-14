@@ -234,12 +234,7 @@ export function AuthLayout({ mode }: AuthLayoutProps) {
       {/* Right Section */}
       <div className="hidden bg-[#F8F9FA] md:flex md:w-1/2">
         <div className="flex flex-col justify-center px-12 lg:px-16 xl:px-24">
-          <div className="mb-8 h-[300px] w-full rounded-2xl bg-[#E9ECEF]" />
-          <div className="relative">
-            <p className="text-xl leading-relaxed text-[#2D2D2D]">
-              The mock interview feature is phenomenal. I conducted 10 mock interviews each time before facing the real thing, significantly boosting my confidence.
-            </p>
-          </div>
+          <img src="/signup.jpg" alt="" className="w-full rounded-xl" />
         </div>
       </div>
     </div>
