@@ -25,6 +25,8 @@ export function useAudioRecorder() {
 
   const startRecording = useCallback(async () => {
     try {
+      setIsRecording(true)
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           channelCount: 1,
@@ -66,8 +68,6 @@ export function useAudioRecorder() {
           stream.getTracks().forEach(track => track.stop())
         }
       }
-
-      setIsRecording(true)
       return true
     } catch (error) {
       console.error('Error starting recording:', error)
@@ -81,6 +81,8 @@ export function useAudioRecorder() {
   }, [toast])
 
   const stopRecording = useCallback(async (currentTime: number) => {
+    setIsRecording(false)
+
     if (audioRecorderRef.current) {
       audioRecorderRef.current.stop()
     }
@@ -108,7 +110,6 @@ export function useAudioRecorder() {
       
       // Clear audio chunks
       setAudioChunks([])
-      setIsRecording(false)
       
       return newTranscript
     } catch (error) {

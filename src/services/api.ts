@@ -1,4 +1,4 @@
-import { fetchApi, fetchSSE } from './fetch'
+import { fetchApi, fetchSSE, API_BASE_URL } from './fetch'
 import { 
   CreateAccountRequest, 
   CreateAccountResponse, 
@@ -54,7 +54,7 @@ export const startInterview = (interviewId: string) => fetchApi<StartInterviewRe
 )
 
 export async function voiceFileToText(formData: FormData) {
-  const response = await fetch('/file/voice-to-text', {
+  const response = await fetch(`${API_BASE_URL}/file/voice-to-text`, {
     method: 'POST',
     headers: {
       'X-Token': localStorage.getItem('token') || '',
@@ -67,7 +67,7 @@ export async function voiceFileToText(formData: FormData) {
 
 export const textToVoice = (text: string, onMessage: (audio: ArrayBuffer) => void): WebSocket => {
   // Create WebSocket connection
-  const ws = new WebSocket('/text-to-voice')
+  const ws = new WebSocket(`${API_BASE_URL}/text-to-voice`)
   
   // Connection opened
   ws.onopen = () => {
@@ -97,7 +97,7 @@ export const voiceStreamToText = (onMessage: (text: string) => void): {
   start: (audioChunk: Blob) => void;
   stop: () => void;
 } => {
-  const ws = new WebSocket('/voice-to-text')
+  const ws = new WebSocket(`${API_BASE_URL}/voice-to-text`)
   
   ws.onopen = () => {
     console.log('Voice to text WebSocket connection established')

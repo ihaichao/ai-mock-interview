@@ -9,8 +9,10 @@ import {
 import { Eye, Video } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import Link from 'next/link'
 
 interface Interview {
+  id: string
   job: string
   lastUpdated: string
   score?: number
@@ -18,10 +20,10 @@ interface Interview {
 }
 
 const interviews: Interview[] = [
-  { job: "Java Engineer", lastUpdated: "11 Nov, 2024", state: "Upcoming" },
-  { job: "Product Manager", lastUpdated: "11 Nov, 2024", score: 87, state: "Completed" },
-  { job: "Java Engineer", lastUpdated: "11 Nov, 2024", score: 70, state: "Completed" },
-  { job: "Mobile Developer", lastUpdated: "11 Nov, 2024", score: 82, state: "Completed" },
+  { job: "Java Engineer", lastUpdated: "11 Nov, 2024", state: "Upcoming", id: "0" },
+  { job: "Product Manager", lastUpdated: "11 Nov, 2024", score: 87, state: "Completed", id: "1" },
+  { job: "Java Engineer", lastUpdated: "11 Nov, 2024", score: 70, state: "Completed", id: "2" },
+  { job: "Mobile Developer", lastUpdated: "11 Nov, 2024", score: 82, state: "Completed", id: "3" },
 ]
 
 export function InterviewTable() {
@@ -75,7 +77,11 @@ export function InterviewTable() {
                   className="h-8 gap-2 px-3 text-sm font-medium text-[#6C757D] hover:bg-gray-100 hover:text-[#2D2D2D]"
                 >
                   <Eye className="h-4 w-4" />
-                  View Report
+                  <Link
+                    href={`/dashboard/interview/${interview.id}/result`}
+                  >
+                    View Report
+                  </Link>
                 </Button>
               )}
             </TableCell>

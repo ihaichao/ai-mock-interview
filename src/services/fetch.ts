@@ -11,7 +11,7 @@ interface SSEOptions<T> {
 }
 
 // Base API configuration
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
+export const API_BASE_URL = process.env.NODE_ENV === 'development' 
   ? '' 
   : 'https://www.2100wbtc.com:8080'
 
