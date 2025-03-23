@@ -118,3 +118,86 @@ export interface StartInterviewResponse extends ApiResponse {
 export interface VoiceFileToTextResponse extends ApiResponse {
   text: string
 }
+
+// 添加面试评估结果的类型定义
+export interface SkillScore {
+  name: string;
+  score: number;
+  tooltip?: string;
+}
+
+export interface InterviewEvaluation {
+  received_data: {
+    'Attitude and Professionalism': number;
+    'Communication Skills': number;
+    'Problem-Solving Ability': number;
+    'Professional Knowledge': number;
+    'Self-awareness and Learning Ability': number;
+    'Teamwork and Interpersonal Skills': number;
+  }
+}
+
+export interface GetInterviewEvaluationResponse {
+  status: boolean;
+  message?: string;
+  data?: InterviewEvaluation;
+}
+
+// 用户个人资料类型
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  isMember: boolean;
+  memberExpireDate: string;
+  createTime: string;
+  modifyTime: string;
+}
+
+export interface GetUserProfileResponse extends ApiResponse {
+  data?: UserProfile;
+}
+
+export interface StartChatRequest {
+  interviewId: string
+  userInput: string
+}
+
+// 忘记密码请求类型
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+// 忘记密码响应类型
+export interface ForgotPasswordResponse extends ApiResponse {
+  code: number;
+  message: string;
+}
+
+// 面试列表项类型
+export interface InterviewItem {
+  id: string;
+  title: string;
+  company: string;
+  position: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 获取面试列表响应类型
+export interface GetInterviewListResponse extends ApiResponse {
+  data?: {
+    list: InterviewItem[];
+    total: number;
+  };
+}
+
+// 获取面试列表请求参数类型
+export interface GetInterviewListRequest {
+  page?: number;
+  pageSize?: number;
+}
+
+// 关闭面试响应类型
+export interface CloseInterviewResponse extends ApiResponse {}

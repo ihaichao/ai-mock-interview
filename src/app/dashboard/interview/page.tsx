@@ -7,7 +7,6 @@ import { MockInterviewDialog } from "@/components/dashboard/mock-interview-dialo
 import { Video } from 'lucide-react'
 
 export default function InterviewPage() {
-  const [filter, setFilter] = useState<"all" | "completed">("completed")
   const [dialogOpen, setDialogOpen] = useState(false)
 
   return (
@@ -23,7 +22,7 @@ export default function InterviewPage() {
         </Button>
       </div>
 
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <Button
           variant={filter === "completed" ? "secondary" : "ghost"}
           onClick={() => setFilter("completed")}
@@ -31,7 +30,7 @@ export default function InterviewPage() {
         >
           Completed
         </Button>
-      </div>
+      </div> */}
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <InterviewTable />

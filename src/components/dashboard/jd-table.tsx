@@ -11,6 +11,7 @@ import { Eye, Trash2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import useSWRMutation from "swr/mutation"
 import { API_ROUTES, fetchJDList } from "@/services/api"
+import { LoadingIndicator } from "@/components/ui/loading-indicator"
 
 interface JD {
   jdId: string
@@ -36,11 +37,26 @@ export function JDTable() {
   }, [fetchJDs])
 
   if (isMutating) {
-    return <div className="text-center py-4">Loading...</div>
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingIndicator message="Loading job descriptions..." />
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="text-center py-4 text-red-500">Failed to load JD list</div>
+    return (
+      <div className="flex h-64 flex-col items-center justify-center text-red-500">
+        <p className="mb-2 text-lg">Failed to load JD list</p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => fetchJDs()}
+        >
+          Try Again
+        </Button>
+      </div>
+    )
   }
 
   return (

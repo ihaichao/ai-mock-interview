@@ -12,6 +12,7 @@ import useSWRMutation from "swr/mutation"
 import { API_ROUTES, fetchResumeList } from "@/services/api"
 import { useEffect } from "react"
 import { useRouter } from 'next/navigation'
+import { LoadingIndicator } from "@/components/ui/loading-indicator"
 
 interface Resume {
   resumeId: number
@@ -38,11 +39,26 @@ export function ResumeTable() {
   }
 
   if (isMutating) {
-    return <div className="text-center py-4">Loading...</div>
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingIndicator message="Loading resumes..." />
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="text-center py-4 text-red-500">Failed to load resume list</div>
+    return (
+      <div className="flex h-64 flex-col items-center justify-center text-red-500">
+        <p className="mb-2 text-lg">Failed to load resume list</p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => fetchResumes()}
+        >
+          Try Again
+        </Button>
+      </div>
+    )
   }
 
   return (

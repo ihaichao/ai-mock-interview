@@ -49,6 +49,7 @@ export function useInterviewChat(interviewId: string) {
     if (!text.trim() || isChatLoading) return
     setIsChatLoading(true)
     messageRef.current = ''
+    const startTime = Date.now()
 
     try {
       if (abortControllerRef.current) {
@@ -89,7 +90,7 @@ export function useInterviewChat(interviewId: string) {
                   // Add new assistant message
                   return [...prev, {
                     content: messageRef.current,
-                    time: currentTime
+                    time: currentTime + Math.floor((Date.now() - startTime) / 1000)
                   }]
                 }
               })

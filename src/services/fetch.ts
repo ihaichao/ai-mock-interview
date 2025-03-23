@@ -2,6 +2,7 @@ interface RequestOptions<T> {
   arg?: T
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
+  timeout?: number
 }
 
 interface SSEOptions<T> {
@@ -17,7 +18,7 @@ export const API_BASE_URL = process.env.NODE_ENV === 'development'
 
 export async function fetchApi<TResponse, TRequest = any>(
   url: string, 
-  { arg, method = 'POST', headers }: RequestOptions<TRequest>
+  { arg, method = 'POST', headers, timeout = 60000 }: RequestOptions<TRequest>
 ): Promise<TResponse> {
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -26,13 +27,14 @@ export async function fetchApi<TResponse, TRequest = any>(
   }
 
   let finalUrl = API_BASE_URL + url
-  const requestOptions: RequestInit = {
+  const requestOptions: RequestInit & { timeout?: number } = {
     method,
     mode: 'cors',
     headers: {
       ...defaultHeaders,
       ...headers
-    }
+    },
+    timeout // 设置超时时间为 60 秒
   }
 
   // 如果是 GET 请求，将参数添加到 URL 上
@@ -48,20 +50,24 @@ export async function fetchApi<TResponse, TRequest = any>(
       finalUrl += `?${queryString}`
     }
   } else if (method === 'POST' && arg) {
-    // POST 请求将参数放在 body 中
-    requestOptions.body = headers?.['Content-Type'] === 'multipart/form-data' 
-      ? (arg instanceof FormData ? arg : Object.entries(arg).reduce((formData, [key, value]) => {
-          formData.append(key, value as string);
-          return formData;
-        }, new FormData()))
-      : JSON.stringify(arg)
+    // 如果是 FormData 类型，不要设置 Content-Type，让浏览器自动处理
+    if (arg instanceof FormData) {
+      if (requestOptions.headers) {
+        delete (requestOptions.headers as any)['Content-Type'];
+      }
+      requestOptions.body = arg;
+    } else {
+      requestOptions.body = JSON.stringify(arg);
+    }
   }
 
   const response = await fetch(finalUrl, requestOptions)
 
-  if (!response.ok) {
-    throw new Error('Network response was not ok')
-  }
+  console.log('response :>> ', response);
+
+  // if (!response.ok) {
+  //   throw new Error('Network response was not ok')
+  // }
 
   const data = await response.json()
 

@@ -17,6 +17,14 @@ import {
   CreateInterviewResponse,
   StartInterviewRequest,
   StartInterviewResponse,
+  GetInterviewEvaluationResponse,
+  GetUserProfileResponse,
+  StartChatRequest,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  GetInterviewListRequest,
+  GetInterviewListResponse,
+  CloseInterviewResponse
 } from './types'
 
 export const API_ROUTES = {
@@ -32,26 +40,14 @@ export const API_ROUTES = {
   START_INTERVIEW: '/mockInterview/interview/start',
   VOICE_FILE_TO_TEXT: '/file/voice-to-text',
   START_CHAT: '/mockInterview/interview/startChat',
-  UPLOAD_RESUME: '/mockInterview/resume/upload'
+  UPLOAD_RESUME: '/mockInterview/resume/upload',
+  GET_INTERVIEW_EVALUATION: '/mockInterview/interview/evaluate',
+  GET_USER_PROFILE: '/mockInterview/profile/detail',
+  FORGOT_PASSWORD: '/mockInterview/forgot-password',
+  GET_INTERVIEW_LIST: '/mockInterview/ai-mock-interview/list',
+  CLOSE_INTERVIEW: '/mockInterview/interview/closeInterview',
 } as const
 
-
-export const createAccount = fetchApi<CreateAccountResponse, CreateAccountRequest>
-export const login = fetchApi<LoginResponse, CreateAccountRequest> 
-export const createJD = fetchApi<CreateJDResponse, CreateJDRequest>
-export const fetchJDList = fetchApi<GetJDListResponse, GetJDListRequest>
-export const createPayment = fetchApi<CreatePaymentResponse, CreatePaymentRequest>
-export const createResume = fetchApi<CreateResumeResponse, CreateResumeRequest>
-export const fetchResumeList = () => fetchApi<FetchResumeListResponse, null>(API_ROUTES.FETCH_RESUME_LIST, { method: 'GET' })
-export const fetchResumeDetail = (resumeId: string) => fetchApi<FetchResumeDetailResponse, null>(`${API_ROUTES.FETCH_RESUME_DETAIL}/${resumeId}`, { method: 'GET' })
-export const createInterview = (params: CreateInterviewRequest) => fetchApi<CreateInterviewResponse, CreateInterviewRequest>(
-  API_ROUTES.CREATE_INTERVIEW, 
-  { method: 'GET', arg: params }
-)
-export const startInterview = (interviewId: string) => fetchApi<StartInterviewResponse, StartInterviewRequest>(
-  API_ROUTES.START_INTERVIEW, 
-  { method: 'GET', arg: { interviewId } }
-)
 
 export async function voiceFileToText(formData: FormData) {
   const response = await fetch(`${API_BASE_URL}/file/voice-to-text`, {
@@ -66,29 +62,22 @@ export async function voiceFileToText(formData: FormData) {
 }
 
 export const textToVoice = (text: string, onMessage: (audio: ArrayBuffer) => void): WebSocket => {
-  // Create WebSocket connection
   const ws = new WebSocket(`${API_BASE_URL}/text-to-voice`)
   
-  // Connection opened
   ws.onopen = () => {
-    // Send the text to convert when connection is established
     ws.send(JSON.stringify(text))
   }
   
-  // Listen for messages
   ws.onmessage = (event) => {
-    // Convert the received data to ArrayBuffer
     event.data.arrayBuffer().then((buffer: ArrayBuffer) => {
       onMessage(buffer)
     })
   }
 
-  // Handle errors
   ws.onerror = (error) => {
     console.error('WebSocket Error:', error)
   }
 
-  // Return the WebSocket instance so the caller can close it when needed
   return ws
 }
 
@@ -144,10 +133,22 @@ export const voiceStreamToText = (onMessage: (text: string) => void): {
   }
 }
 
-interface StartChatRequest {
-  interviewId: string
-  userInput: string
-}
+export const createAccount = fetchApi<CreateAccountResponse, CreateAccountRequest>
+export const login = fetchApi<LoginResponse, CreateAccountRequest> 
+export const createJD = fetchApi<CreateJDResponse, CreateJDRequest>
+export const fetchJDList = fetchApi<GetJDListResponse, GetJDListRequest>
+export const createPayment = fetchApi<CreatePaymentResponse, CreatePaymentRequest>
+export const createResume = fetchApi<CreateResumeResponse, CreateResumeRequest>
+export const fetchResumeList = () => fetchApi<FetchResumeListResponse, null>(API_ROUTES.FETCH_RESUME_LIST, { method: 'GET' })
+export const fetchResumeDetail = (resumeId: string) => fetchApi<FetchResumeDetailResponse, null>(`${API_ROUTES.FETCH_RESUME_DETAIL}/${resumeId}`, { method: 'GET' })
+export const createInterview = (params: CreateInterviewRequest) => fetchApi<CreateInterviewResponse, CreateInterviewRequest>(
+  API_ROUTES.CREATE_INTERVIEW, 
+  { method: 'GET', arg: params }
+)
+export const startInterview = (interviewId: string) => fetchApi<StartInterviewResponse, StartInterviewRequest>(
+  API_ROUTES.START_INTERVIEW, 
+  { method: 'GET', arg: { interviewId } }
+)
 
 export const startChat = (
   params: StartChatRequest,
@@ -172,10 +173,40 @@ export const uploadResume = async (file: File) => {
     API_ROUTES.UPLOAD_RESUME, 
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
       arg: formData
     }
   );
 }
+
+export const getInterviewEvaluation = (interviewId: string) => fetchApi<GetInterviewEvaluationResponse, null>(
+  `${API_ROUTES.GET_INTERVIEW_EVALUATION}?interviewId=${interviewId}`, 
+  { method: 'GET' }
+)
+
+export const getUserProfile = () => fetchApi<GetUserProfileResponse, null>(
+  API_ROUTES.GET_USER_PROFILE, 
+  { method: 'GET' }
+)
+
+export const forgotPassword = (email: string) => fetchApi<ForgotPasswordResponse, ForgotPasswordRequest>(
+  API_ROUTES.FORGOT_PASSWORD,
+  {
+    method: 'POST',
+    arg: { email }
+  }
+)
+
+export const getInterviewList = (params?: GetInterviewListRequest) => 
+  fetchApi<GetInterviewListResponse, GetInterviewListRequest>(
+    API_ROUTES.GET_INTERVIEW_LIST, 
+    { 
+      method: 'GET',
+      arg: params
+    }
+  )
+
+export const closeInterview = (interviewId: string) => 
+  fetchApi<CloseInterviewResponse, null>(
+    `${API_ROUTES.CLOSE_INTERVIEW}?interviewId=${interviewId}`, 
+    { method: 'GET' }
+  )
