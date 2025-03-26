@@ -175,18 +175,6 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
     setShowLeaveConfirm(false)
   }
 
-  // If no permission, show error state (will redirect soon)
-  // if (!hasAudioPermission) {
-  //   return (
-  //     <div className="flex h-screen items-center justify-center bg-[#F8F9FA]">
-  //       <div className="text-center text-red-500">
-  //         <p className="mb-2 text-lg">Microphone access denied</p>
-  //         <p className="text-sm">Redirecting to interview list...</p>
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="flex h-screen flex-col bg-[#F8F9FA]">
       {/* Header */}

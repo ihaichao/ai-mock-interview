@@ -201,3 +201,12 @@ export interface GetInterviewListRequest {
 
 // 关闭面试响应类型
 export interface CloseInterviewResponse extends ApiResponse {}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse extends ApiResponse {}
+
+export interface DeleteResumeResponse extends ApiResponse {}

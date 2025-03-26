@@ -24,7 +24,10 @@ import {
   ForgotPasswordResponse,
   GetInterviewListRequest,
   GetInterviewListResponse,
-  CloseInterviewResponse
+  CloseInterviewResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  DeleteResumeResponse
 } from './types'
 
 export const API_ROUTES = {
@@ -46,6 +49,8 @@ export const API_ROUTES = {
   FORGOT_PASSWORD: '/mockInterview/forgot-password',
   GET_INTERVIEW_LIST: '/mockInterview/ai-mock-interview/list',
   CLOSE_INTERVIEW: '/mockInterview/interview/closeInterview',
+  RESET_PASSWORD: '/mockInterview/reset-password',
+  DELETE_RESUME: '/mockInterview/resume/delete',
 } as const
 
 
@@ -208,5 +213,20 @@ export const getInterviewList = (params?: GetInterviewListRequest) =>
 export const closeInterview = (interviewId: string) => 
   fetchApi<CloseInterviewResponse, null>(
     `${API_ROUTES.CLOSE_INTERVIEW}?interviewId=${interviewId}`, 
+    { method: 'GET' }
+  )
+
+export const resetPassword = (params: ResetPasswordRequest) => 
+  fetchApi<ResetPasswordResponse, ResetPasswordRequest>(
+    API_ROUTES.RESET_PASSWORD,
+    {
+      method: 'POST',
+      arg: params
+    }
+  )
+
+export const deleteResume = (resumeId: string) => 
+  fetchApi<DeleteResumeResponse, null>(
+    `${API_ROUTES.DELETE_RESUME}/${resumeId}`, 
     { method: 'GET' }
   )

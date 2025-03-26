@@ -14,7 +14,7 @@ export default function ResumePage() {
   return (
     <div className="h-full p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-medium text-[#2D2D2D]">resume</h1>
+        <h1 className="text-2xl font-medium text-[#2D2D2D]">Resume</h1>
         <div className="flex items-center gap-3">
           <Button 
             onClick={() => setUploadOpen(true)}

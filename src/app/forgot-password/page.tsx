@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
             
             <h1 className="mb-2 text-center text-2xl font-bold text-[#2D2D2D]">Forgot Password</h1>
             <p className="text-center text-sm text-[#6C757D]">
-              Fill in your email and we will send you the verification code for resetting your password.
+              Fill in your email and we will send you a link to reset your password.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <div className="rounded-lg border border-green-100 bg-green-50 p-4 text-center">
               <p className="text-sm text-green-700">
-                We've sent a verification code to your email. Please check your inbox and follow the instructions to reset your password.
+                We've sent a link to your email. Please check your inbox and follow the instructions to reset your password.
               </p>
               <Button
                 className="mt-4 w-full rounded-lg bg-black py-6 text-white hover:bg-gray-800"
