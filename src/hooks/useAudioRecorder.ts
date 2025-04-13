@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useToast } from '@/components/hooks/use-toast'
 import { useVoiceFileToText } from './useVoiceFileToText'
+import { Language } from '@/services/types'
 
 interface AudioRecorder {
   stream: MediaStream;
@@ -15,12 +16,12 @@ interface Transcript {
   text: string;
 }
 
-export function useAudioRecorder() {
+export function useAudioRecorder(language: Language) {
   const [isRecording, setIsRecording] = useState(false)
   const [audioChunks, setAudioChunks] = useState<Int16Array[]>([])
   const [transcripts, setTranscripts] = useState<Transcript[]>([])
   const audioRecorderRef = useRef<AudioRecorder | null>(null)
-  const { isConverting, convertToText } = useVoiceFileToText()
+  const { isConverting, convertToText } = useVoiceFileToText(language)
   const { toast } = useToast()
 
   const startRecording = useCallback(async () => {

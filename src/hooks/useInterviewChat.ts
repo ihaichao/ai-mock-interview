@@ -2,30 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { startChat, textToVoice } from '@/services/api'
 import { useToast } from '@/components/hooks/use-toast'
 import { playAudio } from '@/lib/utils'
-
-interface StreamResponse {
-  id: string
-  object: string
-  created: number
-  model: string
-  system_fingerprint: string
-  choices: Array<{
-    index: number
-    delta: {
-      role?: string
-      content?: string
-    }
-    logprobs: null
-    finish_reason: null | string
-  }>
-}
+import { Language } from '@/services/types'
 
 export interface ChatMessage {
   content: string
   time: number
 }
 
-export function useInterviewChat(interviewId: string) {
+export function useInterviewChat(interviewId: string, language: Language) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [isChatLoading, setIsChatLoading] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -33,7 +17,6 @@ export function useInterviewChat(interviewId: string) {
   const messageRef = useRef('')
   const { toast } = useToast()
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
@@ -66,14 +49,18 @@ export function useInterviewChat(interviewId: string) {
           interviewId,
           userInput: text
         },
-        (data: StreamResponse) => {
-          const { choices } = data
-          if (choices && choices.length > 0) {
-            const { delta } = choices[0]
+        {
+          language
+        },
+        (data: string) => {
+          console.log('data :>> ', data);
+          // const { choices } = data
+          if (data.length > 0) {
+            // const { delta } = choices[0]
             
-            // Accumulate content
-            if (delta.content) {
-              messageRef.current += delta.content
+            if (data !== '[END]') {
+              // Accumulate content
+              messageRef.current += data
               
               // Update the latest assistant message
               setChatMessages(prev => {
@@ -94,10 +81,7 @@ export function useInterviewChat(interviewId: string) {
                   }]
                 }
               })
-            }
-
-            // When stream ends, convert text to speech
-            if (choices[0].finish_reason !== null) {
+            } else {
               setIsChatLoading(false)
               
               // 使用 ref 中的完整消息

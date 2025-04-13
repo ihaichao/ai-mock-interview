@@ -12,6 +12,8 @@ export interface ApiResponse<T = any> {
   data?: T
 }
 
+export type Language = 'zh' | 'en'
+
 export interface CreateAccountResponse extends ApiResponse {
   accountId?: number
 }
@@ -108,6 +110,7 @@ export interface CreateInterviewResponse extends ApiResponse<string> {}
 
 export interface StartInterviewRequest {
   interviewId: string
+  language: Language
 }
 
 export interface StartInterviewResponse extends ApiResponse {
@@ -181,16 +184,13 @@ export interface InterviewItem {
   company: string;
   position: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createTime: string;
+  updateTime: string;
 }
 
 // 获取面试列表响应类型
 export interface GetInterviewListResponse extends ApiResponse {
-  data?: {
-    list: InterviewItem[];
-    total: number;
-  };
+  data?: InterviewItem[]
 }
 
 // 获取面试列表请求参数类型
@@ -210,3 +210,52 @@ export interface ResetPasswordRequest {
 export interface ResetPasswordResponse extends ApiResponse {}
 
 export interface DeleteResumeResponse extends ApiResponse {}
+
+export interface GetInterviewDetailResponse extends ApiResponse {
+  id: number;
+  interviewId: string;
+  resumeId: number;
+  jobId: number;
+  userId: number;
+  createTime: string;
+  updateTime: string;
+  others: string;
+  score: number;
+  language: Language;
+  company: string;
+  title: string;
+}
+
+export interface CreateAlipayPaymentRequest {
+  amount: string;
+  description: string;
+  email: string;
+  subject: string;
+}
+
+export interface CreateAlipayPaymentResponse extends ApiResponse {
+  data?: {
+    paymentUrl: string;
+  }
+}
+
+export interface UpdateResumeRequest {
+  title: string;
+  type: string;
+  uploadDate: string;
+  personInfo: string;
+  workExperience: string;
+  projectExperience: string;
+  education: string;
+}
+
+export interface UpdateResumeResponse {
+  status: boolean;
+  message: string;
+  data?: {
+    resumeId: number;
+    title: string;
+    type: string;
+    uploadDate: string;
+  };
+}

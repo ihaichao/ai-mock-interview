@@ -7,6 +7,7 @@ interface RequestOptions<T> {
 
 interface SSEOptions<T> {
   arg: T
+  headers?: Record<string, string>
   onMessage: (data: any) => void
   onError?: (error: any) => void
 }
@@ -63,15 +64,30 @@ export async function fetchApi<TResponse, TRequest = any>(
 
   const response = await fetch(finalUrl, requestOptions)
 
+  const contentType = response.headers.get('content-type')
+
   console.log('response :>> ', response);
 
   // if (!response.ok) {
   //   throw new Error('Network response was not ok')
   // }
 
-  const data = await response.json()
+  let data
 
-  if (data.code === 401) {
+  if (contentType?.includes('application/json')) {
+    data = await response.json()
+  } else if (contentType?.includes('text/plain')) {
+    data = await response.text()
+  } else {
+    // 如果不知道响应类型，尝试先解析为 JSON，失败则返回文本
+    try {
+      data = await response.json()
+    } catch {
+      data = await response.text()
+    }
+  }
+
+  if (data?.code === 401) {
     window.location.href = '/sign-in'
   }
 
@@ -80,7 +96,7 @@ export async function fetchApi<TResponse, TRequest = any>(
 
 export async function fetchSSE<TRequest>(
   url: string,
-  { arg, onMessage, onError }: SSEOptions<TRequest>
+  { arg, onMessage, onError, headers }: SSEOptions<TRequest>
 ) {
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -91,7 +107,10 @@ export async function fetchSSE<TRequest>(
   const finalUrl = API_BASE_URL + url
   const response = await fetch(finalUrl, {
     method: 'POST',
-    headers: defaultHeaders,
+    headers: {
+      ...defaultHeaders,
+      ...headers
+    },
     body: JSON.stringify(arg)
   })
 
@@ -119,10 +138,12 @@ export async function fetchSSE<TRequest>(
       
       // Split the chunk into lines and process each line
       const lines = chunk.split('\n')
+      console.log('lines :>> ', lines);
       for (const line of lines) {
+        // onMessage(line)
         if (line.startsWith('data:')) {
           try {
-            const data = JSON.parse(line.slice(5))
+            const data = line.slice(5)
             onMessage(data)
           } catch (error) {
             console.error('Error parsing SSE data:', error)

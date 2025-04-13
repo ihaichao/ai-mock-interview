@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Eye, Video, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { getInterviewList } from "@/services/api"
@@ -23,7 +23,7 @@ export function InterviewTable() {
   const { toast } = useToast()
   const [interviews, setInterviews] = useState<InterviewItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [total, setTotal] = useState(0)
+  const [total] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
 
@@ -37,25 +37,14 @@ export function InterviewTable() {
       })
 
       if (response.status && response.data) {
-        setInterviews(response.data.list || [])
-        setTotal(response.data.total || 0)
+        setInterviews(response.data || [])
       } else {
         toast({
           variant: "destructive",
           title: "Error",
           description: response.message || "Failed to load interviews"
         })
-        // 如果API失败，使用模拟数据
-        setInterviews(mockInterviews.map(mock => ({
-          id: mock.id,
-          title: mock.job,
-          company: "Mock Company",
-          position: mock.job,
-          status: mock.state.toLowerCase(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        })))
-        setTotal(mockInterviews.length)
+
       }
     } catch (error) {
       console.error("Error fetching interviews:", error)
@@ -64,17 +53,6 @@ export function InterviewTable() {
         title: "Error",
         description: "An error occurred while loading interviews"
       })
-      // 如果API失败，使用模拟数据
-      setInterviews(mockInterviews.map(mock => ({
-        id: mock.id,
-        title: mock.job,
-        company: "Mock Company",
-        position: mock.job,
-        status: mock.state.toLowerCase(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      })))
-      setTotal(mockInterviews.length)
     } finally {
       setLoading(false)
     }
@@ -94,23 +72,10 @@ export function InterviewTable() {
   // 计算总页数
   const totalPages = Math.ceil(total / pageSize)
 
-  // 处理查看面试详情
-  const handleViewInterview = (id: string) => {
-    router.push(`/dashboard/interview/${id}`)
-  }
-
   // 处理查看面试结果
   const handleViewResult = (id: string) => {
     router.push(`/dashboard/interview/${id}/result`)
   }
-
-  // 模拟数据，当API失败时使用
-  const mockInterviews = [
-    { job: "Java Engineer", lastUpdated: "11 Nov, 2024", state: "Upcoming", id: "0" },
-    { job: "Product Manager", lastUpdated: "11 Nov, 2024", score: 87, state: "Completed", id: "1" },
-    { job: "Java Engineer", lastUpdated: "11 Nov, 2024", score: 70, state: "Completed", id: "2" },
-    { job: "Mobile Developer", lastUpdated: "11 Nov, 2024", score: 82, state: "Completed", id: "3" },
-  ]
 
   if (loading) {
     return (
@@ -127,9 +92,7 @@ export function InterviewTable() {
           <TableRow className="bg-[#F8F9FA]">
             <TableHead className="w-[25%] py-3 text-sm font-medium text-[#6C757D]">Title</TableHead>
             <TableHead className="w-[20%] py-3 text-sm font-medium text-[#6C757D]">Company</TableHead>
-            <TableHead className="w-[20%] py-3 text-sm font-medium text-[#6C757D]">Position</TableHead>
             <TableHead className="w-[15%] py-3 text-sm font-medium text-[#6C757D]">Date</TableHead>
-            <TableHead className="w-[10%] py-3 text-sm font-medium text-[#6C757D]">Status</TableHead>
             <TableHead className="w-[10%] py-3 text-sm font-medium text-[#6C757D]">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -145,39 +108,16 @@ export function InterviewTable() {
               <TableRow key={interview.id} className="border-b">
                 <TableCell className="py-4 font-medium">{interview.title}</TableCell>
                 <TableCell className="py-4">{interview.company}</TableCell>
-                <TableCell className="py-4">{interview.position}</TableCell>
-                <TableCell className="py-4">{formatDate(interview.createdAt)}</TableCell>
+                <TableCell className="py-4">{formatDate(interview.createTime)}</TableCell>
                 <TableCell className="py-4">
-                  <span 
-                    className={`inline-block rounded-full px-3 py-1 text-sm ${
-                      interview.status === "completed" 
-                        ? "bg-[#E7FAF0] text-[#4AE68A]" 
-                        : "bg-[#FFF4E5] text-[#FFA500]"
-                    }`}
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 gap-2 px-3 text-sm font-medium text-[#6C757D] hover:bg-gray-100 hover:text-[#2D2D2D]"
+                    onClick={() => handleViewResult(interview.id)}
                   >
-                    {interview.status === "completed" ? "Completed" : "Upcoming"}
-                  </span>
-                </TableCell>
-                <TableCell className="py-4">
-                  {interview.status !== "completed" ? (
-                    <Button 
-                      variant="ghost" 
-                      className="h-8 gap-2 px-3 text-sm font-medium text-[#4AE68A] hover:bg-[#E7FAF0] hover:text-[#4AE68A]"
-                      onClick={() => handleViewInterview(interview.id)}
-                    >
-                      <Video className="h-4 w-4" />
-                      Join In
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="ghost" 
-                      className="h-8 gap-2 px-3 text-sm font-medium text-[#6C757D] hover:bg-gray-100 hover:text-[#2D2D2D]"
-                      onClick={() => handleViewResult(interview.id)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Report
-                    </Button>
-                  )}
+                    <Eye className="h-4 w-4" />
+                    View Report
+                  </Button>
                 </TableCell>
               </TableRow>
             ))

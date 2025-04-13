@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Eye, Trash2 } from 'lucide-react'
+import { Eye, Trash2, Pencil } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import useSWRMutation from "swr/mutation"
 import { API_ROUTES, fetchResumeList, deleteResume } from "@/services/api"
@@ -51,6 +51,10 @@ export function ResumeTable() {
 
   const handleView = (resumeId: number) => {
     router.push(`/dashboard/resume/${resumeId}`)
+  }
+
+  const handleEdit = (resumeId: number) => {
+    router.push(`/dashboard/resume/${resumeId}/edit`)
   }
 
   const handleDelete = async () => {
@@ -137,6 +141,14 @@ export function ResumeTable() {
                       onClick={() => handleView(resume.resumeId)}
                     >
                       <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-[#6C757D] hover:text-[#4AE68A]"
+                      onClick={() => handleEdit(resume.resumeId)}
+                    >
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="ghost" 

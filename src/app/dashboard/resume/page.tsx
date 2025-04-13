@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ResumeTable } from "@/components/dashboard/resume-table"
 import { UploadDialog } from "@/components/dashboard/upload-dialog"
-import { Upload, Link2, Plus } from 'lucide-react'
+import { Upload, Plus } from 'lucide-react'
 
 export default function ResumePage() {
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -22,10 +22,6 @@ export default function ResumePage() {
           >
             <Upload className="h-4 w-4" />
             Upload
-          </Button>
-          <Button variant="outline" className="h-9 gap-2 rounded-lg border-[#E5E7EB] px-4 text-sm font-medium text-[#2D2D2D]">
-            <Link2 className="h-4 w-4" />
-            URL
           </Button>
           <Button 
             variant="outline" 

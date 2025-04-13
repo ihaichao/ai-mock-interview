@@ -23,7 +23,7 @@ interface MockInterviewDialogProps {
 const formSchema = z.object({
   resume: z.string().nonempty("Resume is required"),
   job: z.string().nonempty("Job is required"),
-  language: z.enum(["english", "chinese"]).default("english"),
+  language: z.enum(["en", "zh"]).default("en"),
   others: z.string().optional(),
 })
 
@@ -57,7 +57,7 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
     defaultValues: {
       resume: "",
       job: "",
-      language: "english",
+      language: "en",
       others: "",
     },
   })
@@ -75,6 +75,9 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
       const result = await startInterviewTrigger({
         resumeId: data.resume,
         jobId: data.job,
+        headers: {
+          'language': data.language
+        }
       } as any)
 
       if (result.status) {
@@ -163,7 +166,7 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
                     <SelectContent>
                       {jobData?.data?.map((job: any) => (
                         <SelectItem key={job.jdId} value={String(job.jdId)}>
-                          {job.title}
+                          {job.title}@{job.company}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -186,13 +189,13 @@ export function MockInterviewDialog({ open, onOpenChange }: MockInterviewDialogP
                       className="flex gap-4"
                     >
                       <div className="flex items-center space-x-2 rounded-lg bg-[#F8F9FA] px-4 py-3">
-                        <RadioGroupItem value="english" id="english" />
+                        <RadioGroupItem value="en" id="english" />
                         <label htmlFor="english" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                           English
                         </label>
                       </div>
                       <div className="flex items-center space-x-2 rounded-lg bg-[#F8F9FA] px-4 py-3">
-                        <RadioGroupItem value="chinese" id="chinese" />
+                        <RadioGroupItem value="zh" id="chinese" />
                         <label htmlFor="chinese" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                           Chinese
                         </label>

@@ -1,5 +1,6 @@
 import { fetchApi, fetchSSE, API_BASE_URL } from './fetch'
-import { 
+import {
+  Language,
   CreateAccountRequest, 
   CreateAccountResponse, 
   GetJDListRequest, 
@@ -27,7 +28,12 @@ import {
   CloseInterviewResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
-  DeleteResumeResponse
+  DeleteResumeResponse,
+  GetInterviewDetailResponse,
+  CreateAlipayPaymentRequest,
+  CreateAlipayPaymentResponse,
+  UpdateResumeRequest,
+  UpdateResumeResponse
 } from './types'
 
 export const API_ROUTES = {
@@ -51,15 +57,19 @@ export const API_ROUTES = {
   CLOSE_INTERVIEW: '/mockInterview/interview/closeInterview',
   RESET_PASSWORD: '/mockInterview/reset-password',
   DELETE_RESUME: '/mockInterview/resume/delete',
+  GET_INTERVIEW_DETAIL: '/mockInterview/ai-mock-interview/interviewId',
+  CREATE_ALIPAY_PAYMENT: '/mockInterview/alipay/payment/create',
+  UPDATE_RESUME: '/mockInterview/resume/update',
 } as const
 
 
-export async function voiceFileToText(formData: FormData) {
+export async function voiceFileToText(formData: FormData, language: Language) {
   const response = await fetch(`${API_BASE_URL}/file/voice-to-text`, {
     method: 'POST',
     headers: {
       'X-Token': localStorage.getItem('token') || '',
       'X-Email': localStorage.getItem('email') || '',
+      language
     },
     body: formData
   })
@@ -146,17 +156,22 @@ export const createPayment = fetchApi<CreatePaymentResponse, CreatePaymentReques
 export const createResume = fetchApi<CreateResumeResponse, CreateResumeRequest>
 export const fetchResumeList = () => fetchApi<FetchResumeListResponse, null>(API_ROUTES.FETCH_RESUME_LIST, { method: 'GET' })
 export const fetchResumeDetail = (resumeId: string) => fetchApi<FetchResumeDetailResponse, null>(`${API_ROUTES.FETCH_RESUME_DETAIL}/${resumeId}`, { method: 'GET' })
-export const createInterview = (params: CreateInterviewRequest) => fetchApi<CreateInterviewResponse, CreateInterviewRequest>(
+export const createInterview = (params: CreateInterviewRequest & { headers?: Record<string, string> }) => fetchApi<CreateInterviewResponse, CreateInterviewRequest>(
   API_ROUTES.CREATE_INTERVIEW, 
-  { method: 'GET', arg: params }
+  { 
+    method: 'GET', 
+    arg: params,
+    headers: params.headers
+  }
 )
-export const startInterview = (interviewId: string) => fetchApi<StartInterviewResponse, StartInterviewRequest>(
+export const startInterview = (params: StartInterviewRequest) => fetchApi<StartInterviewResponse, StartInterviewRequest>(
   API_ROUTES.START_INTERVIEW, 
-  { method: 'GET', arg: { interviewId } }
+  { method: 'GET', arg: { interviewId: params.interviewId } as StartInterviewRequest, headers: { language: params.language } }
 )
 
 export const startChat = (
   params: StartChatRequest,
+  headers: Record<string, string>,
   onMessage: (data: any) => void,
   onError?: (error: any) => void
 ) => {
@@ -164,6 +179,7 @@ export const startChat = (
     API_ROUTES.START_CHAT,
     {
       arg: params,
+      headers,
       onMessage,
       onError
     }
@@ -229,4 +245,28 @@ export const deleteResume = (resumeId: string) =>
   fetchApi<DeleteResumeResponse, null>(
     `${API_ROUTES.DELETE_RESUME}/${resumeId}`, 
     { method: 'GET' }
+  )
+
+export const getInterviewDetail = (interviewId: string) => 
+  fetchApi<GetInterviewDetailResponse, null>(
+    `${API_ROUTES.GET_INTERVIEW_DETAIL}/${interviewId}`, 
+    { method: 'GET' }
+  )
+
+export const createAlipayPayment = (params: CreateAlipayPaymentRequest) => 
+  fetchApi<CreateAlipayPaymentResponse, CreateAlipayPaymentRequest>(
+    API_ROUTES.CREATE_ALIPAY_PAYMENT,
+    {
+      method: 'POST',
+      arg: params
+    }
+  )
+
+export const updateResume = (resumeId: number, resume: UpdateResumeRequest) => 
+  fetchApi<UpdateResumeResponse, UpdateResumeRequest>(
+    `${API_ROUTES.UPDATE_RESUME}/${resumeId}`,
+    {
+      method: 'POST',
+      arg: resume
+    }
   )

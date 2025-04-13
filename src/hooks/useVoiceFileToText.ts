@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { voiceFileToText } from "@/services/api"
+import { Language } from '@/services/types'
 
-export function useVoiceFileToText() {
+export function useVoiceFileToText(language: Language) {
   const [isConverting, setIsConverting] = useState(false)
 
   const convertToText = async (audioBlob: Blob): Promise<string> => {
@@ -18,7 +19,7 @@ export function useVoiceFileToText() {
       formData.append("file", file)
 
       // 调用 API
-      const result = await voiceFileToText(formData)
+      const result = await voiceFileToText(formData, language)
       
       if (result.status && result.data) {
         return result.data

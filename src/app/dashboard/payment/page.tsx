@@ -7,38 +7,69 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ArrowLeft } from 'lucide-react'
 import { useToast } from "@/components/hooks/use-toast"
 import useSWRMutation from "swr/mutation"
-import { createPayment, API_ROUTES } from "@/services/api"
+import { createAlipayPayment, API_ROUTES } from "@/services/api"
 
 export default function PaymentPage() {
   const router = useRouter()
   const [paymentMethod, setPaymentMethod] = useState<"paypal" | "alipay">("paypal")
   const { toast } = useToast()
 
-  const { trigger: createPaymentTrigger, isMutating } = useSWRMutation(
+  const { trigger: createPaymentTrigger, isMutating: isPaypalMutating } = useSWRMutation(
     API_ROUTES.CREATE_PAYMENT,
-    createPayment
+    (key, { arg }) => createAlipayPayment(arg)
   )
+
+  const { trigger: createAlipayTrigger, isMutating: isAlipayMutating } = useSWRMutation(
+    API_ROUTES.CREATE_ALIPAY_PAYMENT,
+    (key, { arg }) => createAlipayPayment(arg)
+  )
+
+  const isMutating = isPaypalMutating || isAlipayMutating
 
   const handlePay = async () => {
     try {
-      const result = await createPaymentTrigger({
-        amount: '0.01',
-        method: 'paypal',
-        currency: 'USD',
-      })
-
-      if (result.status) {
-        toast({
-          title: "Success",
-          description: "Payment created successfully",
+      let result
+      if (paymentMethod === "paypal") {
+        result = await (createPaymentTrigger as any)({
+          amount: '0.01',
+          method: 'paypal',
+          currency: 'USD',
         })
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.message || "Payment failed",
+        result = await (createAlipayTrigger as any)({
+          amount: '0.01',
+          description: 'Mock interview service',
+          email: localStorage.getItem('email') || '',
+          subject: 'Mock Interview Service'
         })
+
+        const divForm = document.getElementsByTagName('divform')
+        if (divForm.length) {
+          document.body.removeChild(divForm[0])
+        }
+        const div = document.createElement('divform');
+        div.innerHTML = result;
+        document.body.appendChild(div);
+        document.forms[0].setAttribute('target', '_blank') 
+        document.forms[0].submit();
       }
+
+      // if (result.status) {
+      //   if (paymentMethod === "alipay" && result.data?.paymentUrl) {
+      //     window.location.href = result.data.paymentUrl
+      //     return
+      //   }
+      //   toast({
+      //     title: "Success",
+      //     description: "Payment created successfully",
+      //   })
+      // } else {
+      //   toast({
+      //     variant: "destructive",
+      //     title: "Error",
+      //     description: result.message || "Payment failed",
+      //   })
+      // }
     } catch (error) {
       console.error("Payment error:", error)
       toast({

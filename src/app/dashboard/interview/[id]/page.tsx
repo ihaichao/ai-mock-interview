@@ -5,7 +5,8 @@ import { Play, Square } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/hooks/use-toast"
-import { startInterview, textToVoice, closeInterview } from "@/services/api"
+import { startInterview, textToVoice, closeInterview, getInterviewDetail } from "@/services/api"
+import { GetInterviewDetailResponse } from '@/services/types'
 import { useInterviewChat } from "@/hooks/useInterviewChat"
 import { useAudioRecorder } from "@/hooks/useAudioRecorder"
 import { LoadingIndicator } from "@/components/ui/loading-indicator"
@@ -26,18 +27,19 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
   const [time, setTime] = useState(0)
   const [hasAudioPermission, setHasAudioPermission] = useState<boolean | null>(null)
   const [, setAudioContext] = useState<AudioContext | null>(null)
+  const [interviewInfo, setInterviewInfo] = useState<GetInterviewDetailResponse>()
   const router = useRouter()
   const { toast } = useToast()
   const wsRef = useRef<WebSocket | null>(null)
   const [interviewStarted, setInterviewStarted] = useState(false)
   const [openingStatement, setOpeningStatement] = useState("")
-  const { chatMessages, isChatLoading, sendMessage } = useInterviewChat(resolvedParams.id)
+  const { chatMessages, isChatLoading, sendMessage } = useInterviewChat(resolvedParams.id, interviewInfo?.language ?? 'en')
   const { 
     isRecording, 
     transcripts, 
     isConverting, 
     toggleRecording 
-  } = useAudioRecorder()
+  } = useAudioRecorder(interviewInfo?.language ?? 'en')
   
   // 添加离开确认和关闭面试状态
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
@@ -95,7 +97,13 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
       if (!hasAudioPermission || interviewStarted) return
 
       try {
-        const result = await startInterview(resolvedParams.id)
+        // Get interview details first
+        const detailResult = await getInterviewDetail(resolvedParams.id)
+        if (detailResult.status && detailResult.data) {
+          setInterviewInfo(detailResult.data)
+        }
+
+        const result = await startInterview({interviewId: resolvedParams.id, language: detailResult.data.language})
         if (result.status && result.data?.res) {
           setOpeningStatement(result.data.res)
           setInterviewStarted(true)
@@ -180,7 +188,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
       {/* Header */}
       <div className="flex items-center justify-between border-b bg-white px-6 py-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-medium text-[#2D2D2D]">Java Developer@Wipro</h1>
+          <h1 className="text-xl font-medium text-[#2D2D2D]">{interviewInfo?.title}@{interviewInfo?.company}</h1>
           <span className="rounded-full bg-[#E7FAF0] px-3 py-1 text-sm text-[#4AE68A]">
             {formatTime(time)}
           </span>
