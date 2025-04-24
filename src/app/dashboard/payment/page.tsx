@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ArrowLeft } from 'lucide-react'
 import { useToast } from "@/components/hooks/use-toast"
 import useSWRMutation from "swr/mutation"
-import { createAlipayPayment, API_ROUTES } from "@/services/api"
+import { createPaypalPayment, createAlipayPayment, API_ROUTES } from "@/services/api"
 
 export default function PaymentPage() {
   const router = useRouter()
@@ -16,7 +16,7 @@ export default function PaymentPage() {
 
   const { trigger: createPaymentTrigger, isMutating: isPaypalMutating } = useSWRMutation(
     API_ROUTES.CREATE_PAYMENT,
-    (key, { arg }) => createAlipayPayment(arg)
+    (key, { arg }) => createPaypalPayment(arg)
   )
 
   const { trigger: createAlipayTrigger, isMutating: isAlipayMutating } = useSWRMutation(
@@ -35,6 +35,7 @@ export default function PaymentPage() {
           method: 'paypal',
           currency: 'USD',
         })
+        window.open(result)
       } else {
         result = await (createAlipayTrigger as any)({
           amount: '0.01',

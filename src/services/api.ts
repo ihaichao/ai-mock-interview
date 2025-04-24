@@ -152,7 +152,6 @@ export const createAccount = fetchApi<CreateAccountResponse, CreateAccountReques
 export const login = fetchApi<LoginResponse, CreateAccountRequest> 
 export const createJD = fetchApi<CreateJDResponse, CreateJDRequest>
 export const fetchJDList = fetchApi<GetJDListResponse, GetJDListRequest>
-export const createPayment = fetchApi<CreatePaymentResponse, CreatePaymentRequest>
 export const createResume = fetchApi<CreateResumeResponse, CreateResumeRequest>
 export const fetchResumeList = () => fetchApi<FetchResumeListResponse, null>(API_ROUTES.FETCH_RESUME_LIST, { method: 'GET' })
 export const fetchResumeDetail = (resumeId: string) => fetchApi<FetchResumeDetailResponse, null>(`${API_ROUTES.FETCH_RESUME_DETAIL}/${resumeId}`, { method: 'GET' })
@@ -251,6 +250,15 @@ export const getInterviewDetail = (interviewId: string) =>
   fetchApi<GetInterviewDetailResponse, null>(
     `${API_ROUTES.GET_INTERVIEW_DETAIL}/${interviewId}`, 
     { method: 'GET' }
+  )
+
+export const createPaypalPayment = (params: CreatePaymentRequest) => 
+  fetchApi<CreatePaymentResponse, CreatePaymentRequest>(
+    API_ROUTES.CREATE_PAYMENT,
+    {
+      method: 'POST',
+      arg: params
+    }
   )
 
 export const createAlipayPayment = (params: CreateAlipayPaymentRequest) => 
