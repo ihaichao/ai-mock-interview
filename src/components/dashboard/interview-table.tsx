@@ -113,7 +113,7 @@ export function InterviewTable() {
                   <Button 
                     variant="ghost" 
                     className="h-8 gap-2 px-3 text-sm font-medium text-[#6C757D] hover:bg-gray-100 hover:text-[#2D2D2D]"
-                    onClick={() => handleViewResult(interview.id)}
+                    onClick={() => handleViewResult(interview.interviewId)}
                   >
                     <Eye className="h-4 w-4" />
                     View Report

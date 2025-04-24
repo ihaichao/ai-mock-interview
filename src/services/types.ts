@@ -180,6 +180,7 @@ export interface ForgotPasswordResponse extends ApiResponse {
 // 面试列表项类型
 export interface InterviewItem {
   id: string;
+  interviewId: string;
   title: string;
   company: string;
   position: string;

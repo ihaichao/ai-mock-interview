@@ -77,6 +77,7 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('fetchEvaluation======')
     async function fetchEvaluation() {
       try {
         const result = await getInterviewEvaluation(resolvedParams.id)
@@ -102,7 +103,7 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
     }
 
     fetchEvaluation()
-  }, [resolvedParams.id, toast])
+  }, [])
 
   // 处理返回面试列表
   const handleGoBack = () => {
