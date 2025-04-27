@@ -130,7 +130,8 @@ export interface SkillScore {
 }
 
 export interface InterviewEvaluation {
-  received_data: {
+  review: string
+  scores: {
     'Attitude and Professionalism': number;
     'Communication Skills': number;
     'Problem-Solving Ability': number;

@@ -73,7 +73,7 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
   const resolvedParams = use(params)
   const router = useRouter()
   const { toast } = useToast()
-  const [evaluation, setEvaluation] = useState<InterviewEvaluation['received_data'] | null>(null)
+  const [evaluation, setEvaluation] = useState<InterviewEvaluation | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
       try {
         const result = await getInterviewEvaluation(resolvedParams.id)
         if (result.status && result.data) {
-          setEvaluation(result.data.received_data)
+          setEvaluation(result.data)
         } else {
           toast({
             variant: "destructive",
@@ -155,7 +155,7 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
       <div className="px-8 py-6">
         {/* Score Section */}
         <div className="mb-8 rounded-xl bg-white p-8 shadow-sm">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+          <div>
             {/* Overall Score */}
             {/* <div className="flex flex-col items-center justify-center">
               <CircularProgress value={evaluation.overallScore} size="large" gradient />
@@ -163,24 +163,14 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
             </div> */}
 
             {/* Detailed Scores */}
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="grid grid-cols-3 gap-8 mb-8">
               <TooltipProvider>
-                {Object.keys(evaluation).map((skill, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <CircularProgress value={evaluation[skill as keyof typeof evaluation]} />
+                {Object.keys(evaluation.scores).map((skill, index) => (
+                  <div key={index} className="flex items-center gap-4 flex-col">
+                    <CircularProgress value={evaluation.scores[skill as keyof typeof evaluation.scores]} />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-[#2D2D2D]">{skill}</span>
-                        {/* {skill.tooltip && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="h-4 w-4 text-[#6C757D]" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{skill.tooltip}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )} */}
                       </div>
                     </div>
                   </div>
@@ -188,12 +178,13 @@ export default function InterviewResults({ params }: { params: Promise<{ id: str
               </TooltipProvider>
             </div>
           </div>
+          <div className="mt-10 text-[#2D2D2D]">
+            {evaluation.review}
+          </div>
         </div>
 
         {/* Overall Evaluation */}
-        {/* <div className="mb-8 text-[#2D2D2D]">
-          {evaluation.overallEvaluation}
-        </div> */}
+        
 
         {/* Suggestions Section */}
         {/* <div>
