@@ -226,6 +226,7 @@ export interface GetInterviewDetailResponse extends ApiResponse {
   language: Language;
   company: string;
   title: string;
+  duration: string;
 }
 
 export interface CreateAlipayPaymentRequest {

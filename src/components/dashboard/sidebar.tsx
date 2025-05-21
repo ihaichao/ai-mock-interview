@@ -50,7 +50,7 @@ export function Sidebar() {
           ))}
         </nav>
         <div className="border-t py-4">
-          <Link
+          {/* <Link
             href="/dashboard/chat"
             className={`
               flex flex-col items-center justify-center gap-1 py-3 text-xs
@@ -59,12 +59,12 @@ export function Sidebar() {
           >
             <MessageSquare className="h-5 w-5" />
             Chat
-          </Link>
+          </Link> */}
           <button
             onClick={() => setSettingsOpen(true)}
             className={`
               w-full flex flex-col items-center justify-center gap-1 py-3 text-xs
-              text-[#6C757D] hover:text-[#4AE68A]
+              text-[#171818] hover:text-[#4AE68A]
             `}
           >
             <Settings className="h-5 w-5" />

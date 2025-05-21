@@ -5,7 +5,7 @@ import { Play, Square } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/hooks/use-toast"
-import { startInterview, textToVoice, closeInterview, getInterviewDetail } from "@/services/api"
+import { startInterview, textToVoice, textToVoiceEn, closeInterview, getInterviewDetail } from "@/services/api"
 import { GetInterviewDetailResponse } from '@/services/types'
 import { useInterviewChat } from "@/hooks/useInterviewChat"
 import { useAudioRecorder } from "@/hooks/useAudioRecorder"
@@ -44,6 +44,8 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
   // 添加离开确认和关闭面试状态
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [isClosingInterview, setIsClosingInterview] = useState(false)
+  // Add state for time up dialog
+  const [showTimeUp, setShowTimeUp] = useState(false)
 
   // Check microphone permission
   useEffect(() => {
@@ -109,7 +111,9 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
           setInterviewStarted(true)
           
           // Convert opening statement to speech
-          wsRef.current = textToVoice(result.data.res, (audioBuffer) => {
+          wsRef.current = detailResult.data.language === 'en' ? textToVoiceEn(result.data.res, (audioBuffer) => {
+            playAudio(audioBuffer)
+          }) : textToVoice(result.data.res, (audioBuffer) => {
             playAudio(audioBuffer)
           })
         } else {
@@ -182,6 +186,19 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
   const handleCancelLeave = () => {
     setShowLeaveConfirm(false)
   }
+
+  // Add effect to check for time up
+  useEffect(() => {
+    if (!interviewInfo?.duration) return
+    const durationSeconds = Number(interviewInfo.duration) * 60
+    if (time >= durationSeconds) {
+      setShowTimeUp(true)
+      const timer = setTimeout(() => {
+        router.push(`/dashboard/interview/${resolvedParams.id}/result`)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [time, interviewInfo, router, resolvedParams.id])
 
   return (
     <div className="flex h-screen flex-col bg-[#F8F9FA]">
@@ -315,6 +332,17 @@ export default function InterviewRoom({ params }: { params: Promise<{ id: string
               {isClosingInterview ? "Ending..." : "End Interview"}
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* 面试时间到对话框 */}
+      <AlertDialog open={showTimeUp}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Time is up</AlertDialogTitle>
+            <AlertDialogDescription>
+              The interview time is up. You will be redirected to the results page in 3 seconds.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
         </AlertDialogContent>
       </AlertDialog>
     </div>

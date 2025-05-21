@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { startChat, textToVoice } from '@/services/api'
+import { startChat, textToVoice, textToVoiceEn } from '@/services/api'
 import { useToast } from '@/components/hooks/use-toast'
 import { playAudio } from '@/lib/utils'
 import { Language } from '@/services/types'
@@ -85,7 +85,9 @@ export function useInterviewChat(interviewId: string, language: Language) {
               setIsChatLoading(false)
               
               // 使用 ref 中的完整消息
-              wsRef.current = textToVoice(messageRef.current, (audioBuffer) => {
+              wsRef.current = language === 'en' ? textToVoiceEn(messageRef.current, (audioBuffer) => {
+                playAudio(audioBuffer)
+              }) : textToVoice(messageRef.current, (audioBuffer) => {
                 playAudio(audioBuffer)
               })
             }

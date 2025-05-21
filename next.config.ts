@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         destination: 'https://www.2100wbtc.com:8080/text-to-voice'
       },
       {
+        source: '/text-to-voice-en',
+        destination: 'https://www.2100wbtc.com:8080/text-to-voice-en'
+      }, 
+      {
         source: '/file/voice-to-text',
         destination: 'https://www.2100wbtc.com:8080/file/voice-to-text'
       }

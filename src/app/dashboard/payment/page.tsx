@@ -123,7 +123,7 @@ export default function PaymentPage() {
             <RadioGroup
               defaultValue="paypal"
               onValueChange={(value) => setPaymentMethod(value as "paypal" | "alipay")}
-              className="grid grid-cols-2 gap-4"
+              className="grid grid-cols-1 gap-4"
             >
               <div>
                 <RadioGroupItem
@@ -142,7 +142,7 @@ export default function PaymentPage() {
                   />
                 </label>
               </div>
-              <div>
+              {/* <div>
                 <RadioGroupItem
                   value="alipay"
                   id="alipay"
@@ -158,7 +158,7 @@ export default function PaymentPage() {
                     className="h-20 w-20"
                   />
                 </label>
-              </div>
+              </div> */}
             </RadioGroup>
           </div>
 

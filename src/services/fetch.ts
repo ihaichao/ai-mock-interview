@@ -14,7 +14,7 @@ interface SSEOptions<T> {
 
 // Base API configuration
 export const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? '' 
+  ? 'https://www.2100wbtc.com:8080' 
   : 'https://www.2100wbtc.com:8080'
 
 export async function fetchApi<TResponse, TRequest = any>(

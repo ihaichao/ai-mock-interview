@@ -96,6 +96,26 @@ export const textToVoice = (text: string, onMessage: (audio: ArrayBuffer) => voi
   return ws
 }
 
+export const textToVoiceEn = (text: string, onMessage: (audio: ArrayBuffer) => void): WebSocket => {
+  const ws = new WebSocket(`${API_BASE_URL}/text-to-voice-en`)
+  
+  ws.onopen = () => {
+    ws.send(JSON.stringify(text))
+  }
+  
+  ws.onmessage = (event) => {
+    event.data.arrayBuffer().then((buffer: ArrayBuffer) => {
+      onMessage(buffer)
+    })
+  }
+
+  ws.onerror = (error) => {
+    console.error('WebSocket Error:', error)
+  }
+
+  return ws
+}
+
 export const voiceStreamToText = (onMessage: (text: string) => void): {
   ws: WebSocket;
   start: (audioChunk: Blob) => void;
