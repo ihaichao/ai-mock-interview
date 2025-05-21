@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { FileText, Briefcase, Users, User, MessageSquare, Settings } from 'lucide-react'
+import { FileText, Briefcase, Users, User, Settings } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { SettingsDialog } from "./settings-dialog"
 
